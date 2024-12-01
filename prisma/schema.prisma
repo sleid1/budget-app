@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  firstName     String?
+  lastName      String?
+  email         String    @unique
+  emailVerified DateTime?
+  imageUrl      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  type        InvoiceType
+  userId      String
+  icon        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([name, type])
+}
+
+model Invoice {
+  id String @id @default(uuid())
+
+  invoiceNumber String
+  netAmount     Float
+  vat           Float
+  vatRate       Float         @default(25)
+  grossAmount   Float
+  type          InvoiceType
+  description   String?
+  date          DateTime
+  datePaid      DateTime?
+  status        InvoiceStatus @default(NEPLACENO)
+  category      String
+  categoryIcon  String
+  files         File[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MonthHistory {
+  day     Int
+  month   Int
+  year    Int
+  income  Float
+  expense Float
+
+  @@id([day, month, year])
+}
+
+model YearHistory {
+  month   Int
+  year    Int
+  income  Float
+  expense Float
+
+  @@id([month, year])
+}
+
+model File {
+  id       String  @id @default(uuid())
+  url      String
+  name     String
+  mimeType String?
+
+  createdAt DateTime @default(now())
+  Invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String
+}
+
+enum InvoiceType {
+  ULAZNI_RACUN
+  IZLAZNI_RACUN
+}
+
+enum InvoiceStatus {
+  NEPLACENO
+  PLACENO
+  KASNJENJE
+  STORNIRANO
+}
