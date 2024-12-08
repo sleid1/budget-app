@@ -10,6 +10,7 @@ import { Button, buttonVariants } from "./ui/button";
 import { ThemeSwitcherButton } from "./ThemeSwitcherButton";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { signOutAction } from "@/actions/authActions";
 
 const Navbar = () => {
    return (
@@ -85,6 +86,9 @@ function DesktopNavbar() {
                </div>
                <div className="flex items-center gap-2">
                   <ThemeSwitcherButton />
+                  <form action={signOutAction}>
+                     <Button type="submit">Odjavi se</Button>
+                  </form>
                </div>
             </div>
          </nav>

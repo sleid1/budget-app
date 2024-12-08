@@ -1,33 +1,44 @@
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+
+import prisma from "./lib/prisma";
+import authConfig from "./auth.config";
+import { getUserById } from "@/utils/user";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-   providers: [
-      Credentials({
-         // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-         // e.g. domain, username, password, 2FA token, etc.
-         credentials: {
-            email: {},
-            password: {},
-         },
-         authorize: async (credentials) => {
-            let user = null;
+   callbacks: {
+      async session({ token, session }) {
+         console.log({ sessionToken: token });
+         if (token.sub && session.user) {
+            session.user.id = token.sub;
+         }
 
-            // logic to salt and hash password
-            const pwHash = saltAndHashPassword(credentials.password);
+         if (token.role && session.user) {
+            session.user.role = token.role;
+         }
 
-            // logic to verify if the user exists
-            user = await getUserFromDb(credentials.email, pwHash);
+         if (token.firstName && session.user) {
+            session.user.firstName = token.firstName;
+         }
 
-            if (!user) {
-               // No user found, so this is their first attempt to login
-               // Optionally, this is also the place you could do a user registration
-               throw new Error("Invalid credentials.");
-            }
+         if (token.imageUrl && session.user) {
+            session.user.imageUrl = token.imageUrl;
+         }
 
-            // return user object with their profile data
-            return user;
-         },
-      }),
-   ],
+         return session;
+      },
+      async jwt({ token }) {
+         if (!token.sub) return token;
+         const existingUser = await getUserById(token.sub);
+
+         if (!existingUser) return token;
+         token.role = existingUser.role;
+         token.firstName = existingUser.firstName;
+         token.imageUrl = existingUser.imageUrl;
+         return token;
+      },
+   },
+   adapter: PrismaAdapter(prisma),
+   session: { strategy: "jwt" },
+   ...authConfig,
 });

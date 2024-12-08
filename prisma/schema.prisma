@@ -13,14 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id            String    @id @default(cuid())
-  firstName     String?
-  lastName      String?
+  firstName     String
+  lastName      String
   email         String    @unique
-  password      String
+  password      String?
   emailVerified DateTime?
   imageUrl      String?
+  role          UserRole  @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -37,6 +43,18 @@ model Category {
   updatedAt   DateTime    @updatedAt
 
   @@unique([name, type])
+}
+
+enum InvoiceType {
+  ULAZNI_RACUN
+  IZLAZNI_RACUN
+}
+
+enum InvoiceStatus {
+  NEPLACENO
+  PLACENO
+  KASNJENJE
+  STORNIRANO
 }
 
 model Invoice {
@@ -88,16 +106,4 @@ model File {
   createdAt DateTime @default(now())
   Invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   invoiceId String
-}
-
-enum InvoiceType {
-  ULAZNI_RACUN
-  IZLAZNI_RACUN
-}
-
-enum InvoiceStatus {
-  NEPLACENO
-  PLACENO
-  KASNJENJE
-  STORNIRANO
 }
