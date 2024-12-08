@@ -53,7 +53,7 @@ export const registerAction = async (
 
    const validatedFields = RegisterSchema.safeParse(formData);
 
-   const { email, firstName, lastName, password } = validatedFields.data;
+   const { email, name, lastName, password } = validatedFields.data;
 
    const doesUserExist = await getUserByEmail(email);
 
@@ -68,7 +68,7 @@ export const registerAction = async (
    await prisma.user.create({
       data: {
          email,
-         firstName,
+         name,
          lastName,
          password: hashedPassword,
       },

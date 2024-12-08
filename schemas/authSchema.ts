@@ -10,7 +10,7 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-   firstName: z.string().min(1, {
+   name: z.string().min(1, {
       message: "Ovo polje je obavezno",
    }),
    lastName: z.string().min(1, {

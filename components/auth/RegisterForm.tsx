@@ -30,7 +30,7 @@ const RegisterForm = () => {
    const form = useForm<z.infer<typeof RegisterSchema>>({
       resolver: zodResolver(RegisterSchema),
       defaultValues: {
-         firstName: "",
+         name: "",
          lastName: "",
          email: "",
          password: "",
@@ -77,7 +77,7 @@ const RegisterForm = () => {
                   />
                   <FormField
                      control={form.control}
-                     name="firstName"
+                     name="name"
                      render={({ field }) => (
                         <FormItem>
                            <FormLabel>Ime</FormLabel>
