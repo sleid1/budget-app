@@ -5,16 +5,13 @@ import { z } from "zod";
 import { LoginSchema, RegisterSchema } from "@/schemas/authSchema";
 import prisma from "@/lib/prisma";
 import { getUserByEmail } from "@/utils/user";
-import {
-   DEFAULT_LOGIN_REDIRECT,
-   DEFAULT_LOGOUT_REDIRECT,
-} from "@/authRoutesSettings";
+import { DEFAULT_LOGIN_REDIRECT, DEFAULT_LOGOUT_REDIRECT } from "@/routes";
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/mail";
 
 export const loginAction = async (formData: z.infer<typeof LoginSchema>) => {
-   await new Promise((resolve) => setTimeout(resolve, 1000));
-
    const validatedFields = LoginSchema.safeParse(formData);
 
    if (!validatedFields.success) {
@@ -24,6 +21,30 @@ export const loginAction = async (formData: z.infer<typeof LoginSchema>) => {
    }
 
    const { email, password } = validatedFields.data;
+
+   const existingUser = await getUserByEmail(email);
+
+   if (!existingUser || !existingUser.email) {
+      return {
+         error: "Korisnik s ovim podacima ne postoji. Molimo provjerite podatke.",
+      };
+   }
+
+   if (!existingUser.emailVerified || !existingUser.password) {
+      const verificationToken = await generateVerificationToken(
+         existingUser.email
+      );
+
+      await sendVerificationEmail(
+         verificationToken.email,
+         verificationToken.token
+      );
+
+      return {
+         success:
+            "Niste potvrdili email adresu. Na Vašu je email adresu poslan email za verifikaciju računa",
+      };
+   }
 
    try {
       await signIn("credentials", {
@@ -49,8 +70,6 @@ export const loginAction = async (formData: z.infer<typeof LoginSchema>) => {
 export const registerAction = async (
    formData: z.infer<typeof RegisterSchema>
 ) => {
-   await new Promise((resolve) => setTimeout(resolve, 2000));
-
    const validatedFields = RegisterSchema.safeParse(formData);
 
    const { email, name, lastName, password } = validatedFields.data;
@@ -63,20 +82,26 @@ export const registerAction = async (
       };
    }
 
-   const hashedPassword = await bcrypt.hash(password, 10);
+   // const hashedPassword = await bcrypt.hash(password, 10);
 
    await prisma.user.create({
       data: {
          email,
          name,
          lastName,
-         password: hashedPassword,
+         // password: hashedPassword,
       },
    });
 
-   //TODO: SEND VERIFICATION TOKEN EMAIL
+   const verificationToken = await generateVerificationToken(email);
+
+   await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token
+   );
+
    return {
-      success: "Korisnik je kreiran !",
+      success: "Korisnik je uspješno kreiran ! Molimo potvrdite email adresu",
    };
 };
 

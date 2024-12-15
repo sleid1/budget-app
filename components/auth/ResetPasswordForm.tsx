@@ -4,7 +4,7 @@ import * as z from "zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/schemas/authSchema";
+import { ResetSchema } from "@/schemas/authSchema";
 import {
    Form,
    FormControl,
@@ -19,31 +19,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FormError from "@/components/FormError";
 import FormSuccess from "@/components/FormSuccess";
-import { loginAction } from "@/actions/authActions";
-import PasswordInput from "./PasswordInput";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
+import { resetPasswordAction } from "@/actions/resetPasswordAction";
 
-const LoginForm = () => {
+const ResetPasswordForm = () => {
    const [error, setError] = useState<string | undefined>("");
    const [success, setSuccess] = useState<string | undefined>("");
 
    const [isPending, startTransition] = useTransition();
 
-   const form = useForm<z.infer<typeof LoginSchema>>({
-      resolver: zodResolver(LoginSchema),
+   const form = useForm<z.infer<typeof ResetSchema>>({
+      resolver: zodResolver(ResetSchema),
       defaultValues: {
          email: "",
-         password: "",
       },
    });
 
-   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+   const onSubmit = (values: z.infer<typeof ResetSchema>) => {
       setError("");
       setSuccess("");
 
       startTransition(() => {
-         loginAction(values).then((data) => {
+         resetPasswordAction(values).then((data) => {
             setError(data?.error);
             setSuccess(data?.success);
          });
@@ -51,7 +48,12 @@ const LoginForm = () => {
    };
 
    return (
-      <CardWrapper headerLabel="Dobrodošli nazad !" showSocial mode="Prijava">
+      <CardWrapper
+         headerLabel="Zaboravili ste svoju lozinku ?"
+         mode="Zaboravljena lozinka"
+         backButtonLabel="Nazad na prijavu"
+         backButtonHref="/prijava"
+      >
          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                <div className="space-y-6">
@@ -73,36 +75,6 @@ const LoginForm = () => {
                         </FormItem>
                      )}
                   />
-
-                  <FormField
-                     control={form.control}
-                     name="password"
-                     render={({ field }) => (
-                        <FormItem>
-                           <FormLabel>Lozinka</FormLabel>
-                           <FormControl>
-                              <PasswordInput
-                                 name={field.name}
-                                 value={field.value}
-                                 onChange={field.onChange}
-                                 disabled={isPending}
-                                 placeholder="* * * * * *"
-                              />
-                           </FormControl>
-                           <Button
-                              size="sm"
-                              variant="link"
-                              asChild
-                              className="px-0 font-normal"
-                           >
-                              <Link href="/resetiraj-lozinku">
-                                 Zaboravili ste svoju lozinku ?
-                              </Link>
-                           </Button>
-                           <FormMessage />
-                        </FormItem>
-                     )}
-                  />
                </div>
                <FormError message={error} />
                <FormSuccess message={success} />
@@ -111,7 +83,7 @@ const LoginForm = () => {
                   {isPending ? (
                      <Loader2 className="animate-spin !w-6 !h-6" size={48} />
                   ) : (
-                     "Prijavi se"
+                     "Pošalji email za resetiranje lozinke"
                   )}
                </Button>
             </form>
@@ -120,4 +92,4 @@ const LoginForm = () => {
    );
 };
 
-export default LoginForm;
+export default ResetPasswordForm;

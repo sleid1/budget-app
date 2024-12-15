@@ -7,6 +7,17 @@ import { getUserById } from "@/utils/user";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
    callbacks: {
+      async signIn({ user }) {
+         const existingUser = await getUserById(user.id);
+
+         // KORISNIK KOJI NIJE POTVRDIO EMAIL SE NE MOŽE LOGIRATI
+         if (!existingUser?.emailVerified) return false;
+
+         //TODO: ADD 2 FA CHECK
+
+         return true;
+      },
+
       async session({ token, session }) {
          console.log({ sessionToken: token });
          if (token.sub && session.user) {

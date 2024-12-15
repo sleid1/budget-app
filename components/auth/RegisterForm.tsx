@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import FormError from "@/components/FormError";
 import FormSuccess from "@/components/FormSuccess";
 import { registerAction } from "@/actions/authActions";
+import PasswordInput from "./PasswordInput";
+import { Loader2 } from "lucide-react";
 
 const RegisterForm = () => {
    const [error, setError] = useState<string | undefined>("");
@@ -33,7 +35,7 @@ const RegisterForm = () => {
          name: "",
          lastName: "",
          email: "",
-         password: "",
+         // password: "",
       },
    });
 
@@ -111,30 +113,34 @@ const RegisterForm = () => {
                      )}
                   />
 
-                  <FormField
+                  {/* <FormField
                      control={form.control}
                      name="password"
                      render={({ field }) => (
                         <FormItem>
                            <FormLabel>Lozinka</FormLabel>
                            <FormControl>
-                              <Input
-                                 {...field}
-                                 placeholder="* * * * * *"
-                                 type="password"
+                              <PasswordInput
+                                 value={field.value}
+                                 onChange={field.onChange}
                                  disabled={isPending}
-                              ></Input>
+                                 placeholder="* * * * * *"
+                              />
                            </FormControl>
                            <FormMessage />
                         </FormItem>
                      )}
-                  />
+                  /> */}
                </div>
                <FormError message={error} />
                <FormSuccess message={success} />
 
                <Button type="submit" className="w-full" disabled={isPending}>
-                  Registriraj korisnika
+                  {isPending ? (
+                     <Loader2 className="animate-spin !w-6 !h-6" />
+                  ) : (
+                     "Registriraj korisnika"
+                  )}
                </Button>
             </form>
          </Form>

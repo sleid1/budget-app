@@ -4,7 +4,7 @@ import * as z from "zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/schemas/authSchema";
+import { NewPasswordSchema, ResetSchema } from "@/schemas/authSchema";
 import {
    Form,
    FormControl,
@@ -15,35 +15,40 @@ import {
 } from "@/components/ui/form";
 
 import CardWrapper from "./CardWrapper";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FormError from "@/components/FormError";
 import FormSuccess from "@/components/FormSuccess";
-import { loginAction } from "@/actions/authActions";
-import PasswordInput from "./PasswordInput";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
+import {
+   resetPasswordAction,
+   setNewPasswordAction,
+} from "@/actions/resetPasswordAction";
+import PasswordInput from "./PasswordInput";
+import { useSearchParams } from "next/navigation";
 
-const LoginForm = () => {
+const NewPasswordForm = () => {
+   const searchParams = useSearchParams();
+
+   const token = searchParams.get("token");
+
    const [error, setError] = useState<string | undefined>("");
    const [success, setSuccess] = useState<string | undefined>("");
 
    const [isPending, startTransition] = useTransition();
 
-   const form = useForm<z.infer<typeof LoginSchema>>({
-      resolver: zodResolver(LoginSchema),
+   const form = useForm<z.infer<typeof NewPasswordSchema>>({
+      resolver: zodResolver(NewPasswordSchema),
       defaultValues: {
-         email: "",
          password: "",
       },
    });
 
-   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+   const onSubmit = (values: z.infer<typeof NewPasswordSchema>) => {
       setError("");
       setSuccess("");
 
       startTransition(() => {
-         loginAction(values).then((data) => {
+         setNewPasswordAction(values, token).then((data) => {
             setError(data?.error);
             setSuccess(data?.success);
          });
@@ -51,29 +56,15 @@ const LoginForm = () => {
    };
 
    return (
-      <CardWrapper headerLabel="Dobrodošli nazad !" showSocial mode="Prijava">
+      <CardWrapper
+         headerLabel="Unesi svoju novu lozinku"
+         mode="Postavi novu lozinku"
+         backButtonLabel="Nazad na prijavu"
+         backButtonHref="/prijava"
+      >
          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                <div className="space-y-6">
-                  <FormField
-                     control={form.control}
-                     name="email"
-                     render={({ field }) => (
-                        <FormItem>
-                           <FormLabel>Email</FormLabel>
-                           <FormControl>
-                              <Input
-                                 {...field}
-                                 placeholder="john.doe@example.com"
-                                 type="email"
-                                 disabled={isPending}
-                              ></Input>
-                           </FormControl>
-                           <FormMessage />
-                        </FormItem>
-                     )}
-                  />
-
                   <FormField
                      control={form.control}
                      name="password"
@@ -89,16 +80,7 @@ const LoginForm = () => {
                                  placeholder="* * * * * *"
                               />
                            </FormControl>
-                           <Button
-                              size="sm"
-                              variant="link"
-                              asChild
-                              className="px-0 font-normal"
-                           >
-                              <Link href="/resetiraj-lozinku">
-                                 Zaboravili ste svoju lozinku ?
-                              </Link>
-                           </Button>
+
                            <FormMessage />
                         </FormItem>
                      )}
@@ -111,7 +93,7 @@ const LoginForm = () => {
                   {isPending ? (
                      <Loader2 className="animate-spin !w-6 !h-6" size={48} />
                   ) : (
-                     "Prijavi se"
+                     "Resetiraj svoju lozinku"
                   )}
                </Button>
             </form>
@@ -120,4 +102,4 @@ const LoginForm = () => {
    );
 };
 
-export default LoginForm;
+export default NewPasswordForm;
