@@ -57,9 +57,15 @@ function MobileNavbar() {
                            />
                         ))}
                      </div>
-                     <div>
+
+                     <div className="flex justify-center">
                         <ThemeSwitcherButton />
                      </div>
+                     <form action={signOutAction}>
+                        <Button type="submit" className="w-full">
+                           Odjavi se
+                        </Button>
+                     </form>
                   </div>
                </SheetContent>
             </Sheet>
