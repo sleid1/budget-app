@@ -22,9 +22,9 @@ const Navbar = () => {
 };
 
 const items = [
-   { label: "Dashboard", href: "/", icon: <ChartNoAxesCombined /> },
-   { label: "Računi", href: "/racuni", icon: <Layers3 /> },
-   { label: "Postavke", href: "/racuni", icon: <Settings /> },
+   { label: "Dashboard", href: "/dashboard", icon: <ChartNoAxesCombined /> },
+   { label: "Računi", href: "/dashboard/racuni", icon: <Layers3 /> },
+   { label: "Postavke", href: "/dashboard/postavke", icon: <Settings /> },
 ];
 
 function MobileNavbar() {

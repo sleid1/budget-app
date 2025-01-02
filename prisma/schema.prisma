@@ -28,6 +28,17 @@ model User {
   image         String?
   role          UserRole  @default(USER)
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Invoice   Invoice[]
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  invoices    Invoice[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -41,6 +52,7 @@ model Category {
   icon        String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  Invoice     Invoice[]
 
   @@unique([name, type])
 }
@@ -72,8 +84,14 @@ model Invoice {
   status        InvoiceStatus @default(NEPLACENO)
   category      String
   categoryIcon  String
-  files         File[]
+  categoryId    Int
+  categoryRel   Category      @relation(fields: [categoryId], references: [id])
 
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -95,17 +113,6 @@ model YearHistory {
   expense Float
 
   @@id([month, year])
-}
-
-model File {
-  id       String  @id @default(uuid())
-  url      String
-  name     String
-  mimeType String?
-
-  createdAt DateTime @default(now())
-  Invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  invoiceId String
 }
 
 model VerificationToken {
