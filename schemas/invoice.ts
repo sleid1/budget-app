@@ -7,7 +7,7 @@ export const CreateInvoiceSchema = z.object({
       .number()
       .positive("Neto iznos mora biti pozitivan broj")
       .multipleOf(0.01),
-   vat: z.coerce
+   vatAmount: z.coerce
       .number()
       .positive("PDV mora biti nula ili pozitivan broj")
       .multipleOf(0.01),

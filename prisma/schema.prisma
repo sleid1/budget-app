@@ -74,7 +74,7 @@ model Invoice {
 
   invoiceNumber String
   netAmount     Float
-  vat           Float
+  vatAmount     Float
   vatRate       Float         @default(25)
   grossAmount   Float
   type          InvoiceType

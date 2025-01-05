@@ -22,9 +22,9 @@ const Navbar = () => {
 };
 
 const items = [
-   { label: "Dashboard", href: "/dashboard", icon: <ChartNoAxesCombined /> },
-   { label: "Računi", href: "/dashboard/racuni", icon: <Layers3 /> },
-   { label: "Postavke", href: "/dashboard/postavke", icon: <Settings /> },
+   { label: "Pregled", href: "/pregled", icon: <ChartNoAxesCombined /> },
+   { label: "Računi", href: "/racuni", icon: <Layers3 /> },
+   { label: "Postavke", href: "/postavke", icon: <Settings /> },
 ];
 
 function MobileNavbar() {
@@ -32,7 +32,7 @@ function MobileNavbar() {
 
    return (
       <div className="block border-separate bg-background md:hidden">
-         <nav className="container flex items-center justify-between px-8">
+         <nav className="container flex items-center justify-between">
             <div className="flex h-[80px] min-h-[60px] items-center gap-x-4">
                <Logo />
             </div>
@@ -77,7 +77,7 @@ function MobileNavbar() {
 function DesktopNavbar() {
    return (
       <div className="hidden border-separate border-b bg-background md:block">
-         <nav className="container flex items-center justify-between px-8">
+         <nav className="container flex items-center justify-between">
             <div className="flex h-[80px] min-h-[60px] items-center gap-x-4 justify-between w-full">
                <Logo />
                <div className="flex h-full gap-12">

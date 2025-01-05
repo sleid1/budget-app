@@ -2,15 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
    /* config options here */
-   async redirects() {
-      return [
-         {
-            source: "/",
-            destination: "/prijava",
-            permanent: true,
-         },
-      ];
-   },
+   // async redirects() {
+   //    return [
+   //       {
+   //          source: "/",
+   //          destination: "/prijava",
+   //          permanent: true,
+   //       },
+   //    ];
+   // },
 };
 
 export default nextConfig;

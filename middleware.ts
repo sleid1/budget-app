@@ -21,28 +21,36 @@ export default auth((req) => {
 
    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
+   // Redirect unauthenticated users accessing `/` to DEFAULT_LOGOUT_REDIRECT
+   if (nextUrl.pathname === "/") {
+      return Response.redirect(
+         new URL(
+            isLoggedIn ? DEFAULT_LOGIN_REDIRECT : DEFAULT_LOGOUT_REDIRECT,
+            nextUrl
+         )
+      );
+   }
+
    if (isApiAuthRoute) {
       return;
    }
 
    if (isAuthRoute) {
       if (isLoggedIn) {
-         console.log("redirect 1");
          return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
       }
 
       return;
    }
 
+   // Redirect unauthenticated users from protected routes
    if (!isLoggedIn && !isPublicRoute) {
-      console.log("redirect 2");
       return Response.redirect(new URL(DEFAULT_LOGOUT_REDIRECT, nextUrl));
    }
 
    return;
 });
 
-// Optionally, don't invoke Middleware on some paths
 export const config = {
    matcher: [
       // Skip Next.js internals and all static files, unless found in search params
