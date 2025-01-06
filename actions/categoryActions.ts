@@ -24,18 +24,27 @@ export async function createCategory(form: CreateCategorySchemaType) {
 
    const { name, icon, type, description } = parsedBody.data;
 
-   console.log(name);
-   console.log(icon);
-   console.log(type);
-   console.log(description);
+   const existingCategory = await prisma.category.findUnique({
+      where: {
+         name_type: {
+            name,
+            type,
+         },
+      },
+   });
+
+   if (existingCategory) {
+      throw new Error("Kategorija s istim imenom i vrstom računa već postoji.");
+   }
 
    return await prisma.category.create({
       data: {
-         userId: user?.user?.id,
          name,
          icon,
          type,
          description,
+         userId: user?.user?.id,
+         userOriginal: `${user?.user?.name} ${user?.user?.lastName}`,
       },
    });
 }

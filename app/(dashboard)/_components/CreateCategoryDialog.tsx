@@ -92,8 +92,8 @@ const CreateCategoryDialog = ({ type, successCallback }: Props) => {
 
          setOpen((prev) => !prev);
       },
-      onError: () => {
-         toast.error("Došlo je do pogreške", {
+      onError: (error) => {
+         toast.error(error.message, {
             id: "create-category",
          });
       },
