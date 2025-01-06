@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const CreateInvoiceSchema = z.object({
-   id: z.string().uuid("ID mora biti valjani UUID"),
    invoiceNumber: z.string().min(1, "Broj računa je obavezan"),
    netAmount: z.coerce
       .number()
@@ -9,7 +8,7 @@ export const CreateInvoiceSchema = z.object({
       .multipleOf(0.01),
    vatAmount: z.coerce
       .number()
-      .positive("PDV mora biti nula ili pozitivan broj")
+      .min(0, "PDV mora biti nula ili pozitivan broj")
       .multipleOf(0.01),
    vatRate: z
       .number()

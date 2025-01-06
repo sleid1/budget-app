@@ -42,13 +42,14 @@ const CreateinvoiceDialog = ({ trigger, type }: Props) => {
          status: "NEPLACENO",
       },
    });
+
    return (
       <Dialog>
          <DialogTrigger asChild>{trigger}</DialogTrigger>
          <DialogContent className="max-w-6xl">
             <DialogHeader>
                <DialogTitle>
-                  Kreiraj novi{" "}
+                  Kreiraj novi
                   <span
                      className={cn(
                         "m-1",

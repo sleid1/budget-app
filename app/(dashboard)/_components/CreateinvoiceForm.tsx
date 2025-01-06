@@ -13,6 +13,7 @@ import {
    FormField,
    FormItem,
    FormLabel,
+   FormMessage,
 } from "@/components/ui/form";
 import {
    Select,
@@ -37,12 +38,15 @@ import {
    PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Pencil } from "lucide-react"; // Added Pencil for edit icon
+import { CalendarIcon, Loader2, Pencil } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { hr } from "date-fns/locale";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Separator } from "@/components/ui/separator";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createInvoice } from "@/actions/invoiceActions";
+import { toast } from "sonner";
 
 interface Props {
    type: InvoiceType;
@@ -56,44 +60,109 @@ const CreateInvoiceForm = ({ type }: Props) => {
       defaultValues: {
          date: new Date(),
          vatRate: 25,
+         netAmount: 0,
+         grossAmount: 0,
+         vatAmount: 0,
          status: "NEPLACENO",
+         type,
       },
    });
 
-   const { watch, setValue } = form;
+   const { watch, setValue, formState } = form;
+   const { errors } = formState;
 
    // Watch fields
    const status = watch("status");
-   const netAmount = watch("netAmount") || "0"; // Default to "0"
-   const vatRate = watch("vatRate") || 25; // Default to 25
-   const vatAmount = watch("vatAmount") || 0; // Default to 0
+   const netAmount = parseFloat(watch("netAmount"));
+   const vatRate = parseFloat(watch("vatRate"));
+   const vatAmount = parseFloat(watch("vatAmount"));
 
-   // Recalculate VAT and Gross Amount Dynamically
    useEffect(() => {
-      const parsedNetAmount = parseFloat(netAmount?.toString()) || 0;
-      const parsedVatRate = parseFloat(vatRate?.toString()) || 0;
-      const parsedVat = parseFloat(vatAmount?.toString()) || 0;
+      console.log(status);
+      if (status === "NEPLACENO") {
+         setValue("datePaid", undefined);
+      }
+
+      // Early return for invalid netAmount
+      if (isNaN(netAmount)) {
+         setValue("vatAmount", 0);
+         setValue("grossAmount", 0);
+         return;
+      }
 
       if (isVatEditable) {
-         const grossAmount = parseFloat(
-            (parsedNetAmount + parsedVat).toFixed(2)
-         );
-         setValue("grossAmount", grossAmount);
-      } else if (!isNaN(parsedNetAmount) && !isNaN(parsedVatRate)) {
-         const calculatedVat = parseFloat(
-            ((parsedNetAmount * parsedVatRate) / 100).toFixed(2)
-         );
-         const grossAmount = parseFloat(
-            (parsedNetAmount + calculatedVat).toFixed(2)
-         );
-
-         setValue("vatAmount", calculatedVat);
+         // When VAT is editable, calculate grossAmount as netAmount + vatAmount
+         const grossAmount = parseFloat((netAmount + vatAmount).toFixed(2));
          setValue("grossAmount", grossAmount);
       } else {
-         setValue("vatAmount", 0); // Default to 0
-         setValue("grossAmount", 0); // Default to 0
+         // When VAT is not editable, calculate vatAmount and grossAmount
+         const calculatedVat =
+            vatRate > 0
+               ? parseFloat(((netAmount * vatRate) / 100).toFixed(2))
+               : 0;
+         const grossAmount = parseFloat((netAmount + calculatedVat).toFixed(2));
+
+         console.log(calculatedVat);
+         setValue("vatAmount", calculatedVat);
+         setValue("grossAmount", grossAmount);
       }
-   }, [netAmount, vatRate, vatAmount, isVatEditable, setValue]);
+   }, [status, netAmount, vatRate, vatAmount, isVatEditable, setValue]);
+
+   const handleCategoryChange = useCallback(
+      (value: string) => {
+         form.setValue("category", value);
+         form.setValue("categoryId", value);
+      },
+      [form]
+   );
+
+   const queryClient = useQueryClient();
+
+   const { mutate, isPending } = useMutation({
+      mutationFn: createInvoice,
+      onSuccess: () => {
+         toast.success("Račun je uspješno kreiran", {
+            id: "create-invoice",
+         });
+
+         form.reset({
+            type,
+            invoiceNumber,
+            category,
+            date,
+            status,
+            datePaid,
+            netAmount,
+            vatRate,
+         });
+
+         //NAKON ŠTO SMO KREIRALI RAČUN, TREBAMO REVALIDIRATI STRANICU PREGLEDA ŠTO ĆE REFETCHATI PODATKE
+
+         queryClient.invalidateQueries({
+            queryKey: ["overview"],
+         });
+      },
+      onError: (error) => {
+         console.error("Mutation failed:", error);
+         toast.error("Greška pri kreiranju računa");
+      },
+   });
+
+   const onSubmit = useCallback(
+      (values: CreateInvoiceSchemaType) => {
+         console.log("submitting");
+         toast.loading("Unosimo novi račun...", {
+            id: "create-invoice",
+         });
+
+         mutate({
+            ...values,
+         });
+      },
+      [mutate]
+   );
+
+   console.log("Form errors:", formState.errors);
 
    return (
       <Card>
@@ -117,7 +186,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
          </CardHeader>
          <CardContent>
             <Form {...form}>
-               <form className="space-y-8">
+               <form
+                  className="space-y-10"
+                  onSubmit={form.handleSubmit(onSubmit)}
+               >
                   <div className="grid md:grid-cols-4 gap-4">
                      <FormField
                         control={form.control}
@@ -148,7 +220,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
                               <FormItem>
                                  <FormLabel>Kategorija</FormLabel>
                                  <FormControl>
-                                    <CategoryPicker type={type} />
+                                    <CategoryPicker
+                                       type={type}
+                                       onChange={handleCategoryChange}
+                                    />
                                  </FormControl>
                               </FormItem>
                            )}
@@ -161,42 +236,55 @@ const CreateInvoiceForm = ({ type }: Props) => {
                      <FormField
                         control={form.control}
                         name="date"
-                        render={({ field }) => (
-                           <FormItem>
-                              <FormLabel>Datum izdavanja</FormLabel>
-                              <Popover>
-                                 <PopoverTrigger asChild>
-                                    <FormControl>
-                                       <Button
-                                          variant="outline"
-                                          className={cn(
-                                             "w-full font-normal flex justify-between items-center",
-                                             !field.value &&
-                                                "text-muted-foreground"
-                                          )}
-                                       >
-                                          {field.value ? (
-                                             format(field.value, "PPPP", {
-                                                locale: hr,
-                                             })
-                                          ) : (
-                                             <span>Odaberi datum</span>
-                                          )}
-                                          <CalendarIcon />
-                                       </Button>
-                                    </FormControl>
-                                 </PopoverTrigger>
-                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                       mode="single"
-                                       selected={field.value}
-                                       onSelect={field.onChange}
-                                       initialFocus
-                                    />
-                                 </PopoverContent>
-                              </Popover>
-                           </FormItem>
-                        )}
+                        render={({ field }) => {
+                           const [isOpen, setIsOpen] = useState(false);
+                           return (
+                              <FormItem>
+                                 <FormLabel>Datum izdavanja</FormLabel>
+                                 <Popover
+                                    open={isOpen}
+                                    onOpenChange={setIsOpen}
+                                 >
+                                    <PopoverTrigger asChild>
+                                       <FormControl>
+                                          <Button
+                                             variant="outline"
+                                             className={cn(
+                                                "w-full font-normal flex justify-between items-center",
+                                                !field.value &&
+                                                   "text-muted-foreground"
+                                             )}
+                                          >
+                                             {field.value ? (
+                                                format(
+                                                   field.value,
+                                                   "d.M.yyyy. (EEEE)",
+                                                   {
+                                                      locale: hr,
+                                                   }
+                                                )
+                                             ) : (
+                                                <span>Odaberi datum</span>
+                                             )}
+                                             <CalendarIcon />
+                                          </Button>
+                                       </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                       <Calendar
+                                          mode="single"
+                                          selected={field.value}
+                                          onSelect={(date) => {
+                                             field.onChange(date);
+                                             setIsOpen((prev) => !prev);
+                                          }}
+                                          initialFocus
+                                       />
+                                    </PopoverContent>
+                                 </Popover>
+                              </FormItem>
+                           );
+                        }}
                      />
                      <FormField
                         control={form.control}
@@ -236,44 +324,58 @@ const CreateInvoiceForm = ({ type }: Props) => {
                      <FormField
                         control={form.control}
                         name="datePaid"
-                        render={({ field }) => (
-                           <FormItem>
-                              <FormLabel>Datum uplate</FormLabel>
-                              <Popover>
-                                 <PopoverTrigger asChild>
-                                    <FormControl>
-                                       <Button
-                                          variant="outline"
-                                          className={cn(
-                                             "w-full font-normal flex justify-between items-center",
-                                             "disabled:cursor-not-allowed",
-                                             !field.value &&
-                                                "text-muted-foreground"
-                                          )}
-                                          disabled={status !== "PLACENO"}
-                                       >
-                                          {field.value ? (
-                                             format(field.value, "PPPP", {
-                                                locale: hr,
-                                             })
-                                          ) : (
-                                             <span>Odaberi datum</span>
-                                          )}
-                                          <CalendarIcon />
-                                       </Button>
-                                    </FormControl>
-                                 </PopoverTrigger>
-                                 <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                       mode="single"
-                                       selected={field.value}
-                                       onSelect={field.onChange}
-                                       initialFocus
-                                    />
-                                 </PopoverContent>
-                              </Popover>
-                           </FormItem>
-                        )}
+                        render={({ field }) => {
+                           const [isOpen, setIsOpen] = useState(false);
+
+                           return (
+                              <FormItem>
+                                 <FormLabel>Datum uplate</FormLabel>
+                                 <Popover
+                                    open={isOpen}
+                                    onOpenChange={setIsOpen}
+                                 >
+                                    <PopoverTrigger asChild>
+                                       <FormControl>
+                                          <Button
+                                             variant="outline"
+                                             className={cn(
+                                                "w-full font-normal flex justify-between items-center",
+                                                "disabled:cursor-not-allowed",
+                                                !field.value &&
+                                                   "text-muted-foreground"
+                                             )}
+                                             disabled={status !== "PLACENO"}
+                                          >
+                                             {field.value ? (
+                                                format(
+                                                   field.value,
+                                                   "d.M.yyyy. (EEEE)",
+                                                   {
+                                                      locale: hr,
+                                                   }
+                                                )
+                                             ) : (
+                                                <span>Odaberi datum</span>
+                                             )}
+                                             <CalendarIcon />
+                                          </Button>
+                                       </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                       <Calendar
+                                          mode="single"
+                                          selected={field.value}
+                                          onSelect={(date) => {
+                                             field.onChange(date);
+                                             setIsOpen((prev) => !prev);
+                                          }}
+                                          initialFocus
+                                       />
+                                    </PopoverContent>
+                                 </Popover>
+                              </FormItem>
+                           );
+                        }}
                      />
                   </div>
 
@@ -290,7 +392,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                  <Input
                                     type="text"
                                     {...field}
-                                    value={field.value?.toString() || ""}
+                                    value={field.value === 0 ? "" : field.value}
                                  />
                               </FormControl>
                            </FormItem>
@@ -304,7 +406,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                               <FormLabel>Stopa poreza</FormLabel>
                               <FormControl>
                                  <Select
-                                    value={field.value?.toString() || ""}
+                                    value={field.value?.toString()}
                                     onValueChange={(value) =>
                                        field.onChange(Number(value))
                                     }
@@ -335,7 +437,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                        type="text"
                                        {...field}
                                        disabled={!isVatEditable}
-                                       value={field.value?.toString() || ""}
                                        className={cn(
                                           "flex-1 pr-12",
                                           !isVatEditable &&
@@ -363,19 +464,16 @@ const CreateInvoiceForm = ({ type }: Props) => {
                            <FormItem>
                               <FormLabel>Ukupno</FormLabel>
                               <FormControl>
-                                 <Input
-                                    type="text"
-                                    {...field}
-                                    disabled
-                                    value={field.value?.toString() || ""}
-                                 />
+                                 <Input type="text" {...field} disabled />
                               </FormControl>
                            </FormItem>
                         )}
                      />
                   </div>
 
-                  <Button
+                  <FormMessage />
+
+                  {/* <Button
                      type="button"
                      onClick={() => {
                         const values = form.getValues();
@@ -384,9 +482,30 @@ const CreateInvoiceForm = ({ type }: Props) => {
                      className="!disabled:cursor-not-allowed"
                   >
                      Console log form values
-                  </Button>
+                  </Button> */}
                </form>
             </Form>
+
+            <div className="flex gap-2">
+               <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => form.reset()}
+               >
+                  Otkaži
+               </Button>
+               <Button
+                  onClick={form.handleSubmit(onSubmit)}
+                  disabled={isPending}
+                  type="submit"
+               >
+                  {!isPending ? (
+                     "Kreiraj račun"
+                  ) : (
+                     <Loader2 className="animate-spin" />
+                  )}
+               </Button>
+            </div>
          </CardContent>
       </Card>
    );

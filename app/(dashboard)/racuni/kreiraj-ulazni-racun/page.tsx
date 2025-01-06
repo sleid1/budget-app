@@ -1,7 +1,12 @@
 import React from "react";
+import CreateInvoiceForm from "../../_components/CreateinvoiceForm";
 
 const KreirajUlazniRacun = () => {
-   return <div>KreirajUlazniRacun</div>;
+   return (
+      <div>
+         <CreateInvoiceForm type="ULAZNI_RACUN" />
+      </div>
+   );
 };
 
 export default KreirajUlazniRacun;
