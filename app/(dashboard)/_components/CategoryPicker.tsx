@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
    type: InvoiceType;
-   onChange: (value: string) => void;
+   onChange: (value: Category) => void;
 }
 
 const CategoryPicker = ({ type, onChange }: Props) => {
@@ -43,12 +43,12 @@ const CategoryPicker = ({ type, onChange }: Props) => {
    });
 
    const selectedCategory = categoriesQuery.data?.find(
-      (category: Category) => category.name === value
+      (category: Category) => category.name === value.name
    );
 
    const successCallback = useCallback(
       (category: Category) => {
-         setValue(category.name);
+         setValue(category);
          setOpen((prev) => !prev);
       },
       [setValue, setOpen]
@@ -61,7 +61,7 @@ const CategoryPicker = ({ type, onChange }: Props) => {
                variant="outline"
                role="combobox"
                aria-expanded={open}
-               className="w-[200px] justify-between"
+               className="justify-between w-full"
             >
                {selectedCategory ? (
                   <CategoryRow category={selectedCategory} />
@@ -95,7 +95,7 @@ const CategoryPicker = ({ type, onChange }: Props) => {
                            <CommandItem
                               key={category.name}
                               onSelect={(currentValue) => {
-                                 setValue(category.name);
+                                 setValue(category);
                                  setOpen((prev) => !prev);
                               }}
                            >
@@ -103,7 +103,8 @@ const CategoryPicker = ({ type, onChange }: Props) => {
                               <Check
                                  className={cn(
                                     "mr-2 w-4 h-4 opacity-0",
-                                    value === category.name && "opacity-100"
+                                    value.name === category.name &&
+                                       "opacity-100"
                                  )}
                               />
                            </CommandItem>

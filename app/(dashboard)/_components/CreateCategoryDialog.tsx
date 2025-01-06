@@ -17,6 +17,7 @@ import {
    FormField,
    FormItem,
    FormLabel,
+   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +43,7 @@ import { createCategory } from "@/actions/categoryActions";
 import { Category } from "@prisma/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
    type: InvoiceType;
@@ -55,9 +57,15 @@ const CreateCategoryDialog = ({ type, successCallback }: Props) => {
       resolver: zodResolver(CreateCategorySchema),
       defaultValues: {
          name: "",
+         icon: "",
+         description: "",
          type,
       },
    });
+
+   const {
+      formState: { errors },
+   } = form;
 
    const queryClient = useQueryClient();
 
@@ -69,6 +77,7 @@ const CreateCategoryDialog = ({ type, successCallback }: Props) => {
          form.reset({
             name: "",
             icon: "",
+            description: "",
             type,
          }),
             toast.success(`Kategorija ${data.name} je uspješno kreirana`, {
@@ -145,6 +154,8 @@ const CreateCategoryDialog = ({ type, successCallback }: Props) => {
                            <FormControl>
                               <Input {...field} value={field.value || ""} />
                            </FormControl>
+
+                           <FormMessage>{errors.name?.message}</FormMessage>
                         </FormItem>
                      )}
                   />
@@ -197,6 +208,30 @@ const CreateCategoryDialog = ({ type, successCallback }: Props) => {
                                  </PopoverContent>
                               </Popover>
                            </FormControl>
+                           <FormMessage>{errors.icon?.message}</FormMessage>
+                        </FormItem>
+                     )}
+                  />
+
+                  <FormField
+                     control={form.control}
+                     name="description"
+                     render={({ field }) => (
+                        <FormItem>
+                           <FormLabel>Opis kategorije</FormLabel>
+                           <FormControl>
+                              <Textarea
+                                 placeholder="Unesite opis kategorije"
+                                 {...field}
+                                 value={field.value || ""}
+                                 onChange={(e) =>
+                                    form.setValue("description", e.target.value)
+                                 }
+                              />
+                           </FormControl>
+                           <FormMessage>
+                              {errors.description?.message}
+                           </FormMessage>
                         </FormItem>
                      )}
                   />

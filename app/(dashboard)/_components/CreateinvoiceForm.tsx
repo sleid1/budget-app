@@ -1,5 +1,4 @@
 "use client";
-
 import {
    Card,
    CardContent,
@@ -23,6 +22,7 @@ import {
    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { InvoiceType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -47,6 +47,7 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createInvoice } from "@/actions/invoiceActions";
 import { toast } from "sonner";
+import { Category } from "@prisma/client";
 
 interface Props {
    type: InvoiceType;
@@ -58,7 +59,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
    const form = useForm<CreateInvoiceSchemaType>({
       resolver: zodResolver(CreateInvoiceSchema),
       defaultValues: {
-         date: new Date(),
+         invoiceNumber: "",
+         categoryOriginal: "",
+         categoryId: "",
+         dateIssued: new Date(),
          vatRate: 25,
          netAmount: 0,
          grossAmount: 0,
@@ -68,8 +72,11 @@ const CreateInvoiceForm = ({ type }: Props) => {
       },
    });
 
-   const { watch, setValue, formState } = form;
-   const { errors } = formState;
+   const {
+      watch,
+      setValue,
+      formState: { errors },
+   } = form;
 
    // Watch fields
    const status = watch("status");
@@ -78,7 +85,13 @@ const CreateInvoiceForm = ({ type }: Props) => {
    const vatAmount = parseFloat(watch("vatAmount"));
 
    useEffect(() => {
-      console.log(status);
+      console.log(form.getValues());
+      if (Object.keys(errors).length > 0) {
+         console.log("Form errors:", errors);
+      }
+   }, [errors]);
+
+   useEffect(() => {
       if (status === "NEPLACENO") {
          setValue("datePaid", undefined);
       }
@@ -102,16 +115,15 @@ const CreateInvoiceForm = ({ type }: Props) => {
                : 0;
          const grossAmount = parseFloat((netAmount + calculatedVat).toFixed(2));
 
-         console.log(calculatedVat);
          setValue("vatAmount", calculatedVat);
          setValue("grossAmount", grossAmount);
       }
    }, [status, netAmount, vatRate, vatAmount, isVatEditable, setValue]);
 
    const handleCategoryChange = useCallback(
-      (value: string) => {
-         form.setValue("category", value);
-         form.setValue("categoryId", value);
+      (category: Category) => {
+         form.setValue("categoryOriginal", category.name);
+         form.setValue("categoryId", category.id);
       },
       [form]
    );
@@ -125,16 +137,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
             id: "create-invoice",
          });
 
-         form.reset({
-            type,
-            invoiceNumber,
-            category,
-            date,
-            status,
-            datePaid,
-            netAmount,
-            vatRate,
-         });
+         form.reset();
 
          //NAKON ŠTO SMO KREIRALI RAČUN, TREBAMO REVALIDIRATI STRANICU PREGLEDA ŠTO ĆE REFETCHATI PODATKE
 
@@ -150,7 +153,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
    const onSubmit = useCallback(
       (values: CreateInvoiceSchemaType) => {
-         console.log("submitting");
          toast.loading("Unosimo novi račun...", {
             id: "create-invoice",
          });
@@ -161,8 +163,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
       },
       [mutate]
    );
-
-   console.log("Form errors:", formState.errors);
 
    return (
       <Card>
@@ -209,33 +209,38 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                     />
                                  </div>
                               </FormControl>
+                              <FormMessage>
+                                 {errors.invoiceNumber?.message}
+                              </FormMessage>
                            </FormItem>
                         )}
                      />
-                     <div className="flex items-center justify-between gap-2">
-                        <FormField
-                           control={form.control}
-                           name="category"
-                           render={({ field }) => (
-                              <FormItem>
-                                 <FormLabel>Kategorija</FormLabel>
-                                 <FormControl>
-                                    <CategoryPicker
-                                       type={type}
-                                       onChange={handleCategoryChange}
-                                    />
-                                 </FormControl>
-                              </FormItem>
-                           )}
-                        />
-                     </div>
+
+                     <FormField
+                        control={form.control}
+                        name="categoryOriginal"
+                        render={({ field }) => (
+                           <FormItem className="md:col-span-2">
+                              <FormLabel>Kategorija</FormLabel>
+                              <FormControl>
+                                 <CategoryPicker
+                                    type={type}
+                                    onChange={handleCategoryChange}
+                                 />
+                              </FormControl>
+                              <FormMessage>
+                                 {errors.categoryOriginal?.message}
+                              </FormMessage>
+                           </FormItem>
+                        )}
+                     />
                   </div>
                   <Separator />
                   <p>Podaci o računu</p>
                   <div className="grid md:grid-cols-3 gap-4">
                      <FormField
                         control={form.control}
-                        name="date"
+                        name="dateIssued"
                         render={({ field }) => {
                            const [isOpen, setIsOpen] = useState(false);
                            return (
@@ -279,9 +284,13 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                              setIsOpen((prev) => !prev);
                                           }}
                                           initialFocus
+                                          locale={hr}
                                        />
                                     </PopoverContent>
                                  </Popover>
+                                 <FormMessage>
+                                    {errors.dateIssued?.message}
+                                 </FormMessage>
                               </FormItem>
                            );
                         }}
@@ -318,6 +327,9 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                     </SelectContent>
                                  </Select>
                               </FormControl>
+                              <FormMessage>
+                                 {errors.status?.message}
+                              </FormMessage>
                            </FormItem>
                         )}
                      />
@@ -370,6 +382,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                              setIsOpen((prev) => !prev);
                                           }}
                                           initialFocus
+                                          locale={hr}
                                        />
                                     </PopoverContent>
                                  </Popover>
@@ -378,7 +391,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         }}
                      />
                   </div>
-
                   <Separator />
                   <p>Iznos</p>
                   <div className="grid md:grid-cols-4 gap-4">
@@ -395,6 +407,9 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                     value={field.value === 0 ? "" : field.value}
                                  />
                               </FormControl>
+                              <FormMessage>
+                                 {errors.netAmount?.message}
+                              </FormMessage>
                            </FormItem>
                         )}
                      />
@@ -466,46 +481,62 @@ const CreateInvoiceForm = ({ type }: Props) => {
                               <FormControl>
                                  <Input type="text" {...field} disabled />
                               </FormControl>
+                              <FormMessage>
+                                 {errors.grossAmount?.message}
+                              </FormMessage>
                            </FormItem>
                         )}
                      />
                   </div>
+                  <Separator />
+                  <p>Dodatne informacije</p>
+                  <FormField
+                     control={form.control}
+                     name="description"
+                     render={({ field }) => (
+                        <FormItem>
+                           <FormLabel>Opis računa</FormLabel>
+                           <FormControl>
+                              <Textarea
+                                 placeholder="Unesite opis računa"
+                                 {...field}
+                                 value={field.value || ""}
+                                 onChange={(e) =>
+                                    form.setValue("description", e.target.value)
+                                 }
+                              />
+                           </FormControl>
+                           <FormMessage>
+                              {errors.description?.message}
+                           </FormMessage>
+                        </FormItem>
+                     )}
+                  />
 
-                  <FormMessage />
-
-                  {/* <Button
-                     type="button"
-                     onClick={() => {
-                        const values = form.getValues();
-                        console.log("Form Values:", values);
-                     }}
-                     className="!disabled:cursor-not-allowed"
-                  >
-                     Console log form values
-                  </Button> */}
+                  <div className="flex gap-2">
+                     <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                           form.reset();
+                        }}
+                     >
+                        Otkaži
+                     </Button>
+                     <Button
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={isPending}
+                        type="submit"
+                     >
+                        {!isPending ? (
+                           "Kreiraj račun"
+                        ) : (
+                           <Loader2 className="animate-spin" />
+                        )}
+                     </Button>
+                  </div>
                </form>
             </Form>
-
-            <div className="flex gap-2">
-               <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => form.reset()}
-               >
-                  Otkaži
-               </Button>
-               <Button
-                  onClick={form.handleSubmit(onSubmit)}
-                  disabled={isPending}
-                  type="submit"
-               >
-                  {!isPending ? (
-                     "Kreiraj račun"
-                  ) : (
-                     <Loader2 className="animate-spin" />
-                  )}
-               </Button>
-            </div>
          </CardContent>
       </Card>
    );

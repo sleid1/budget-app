@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const CreateCategorySchema = z.object({
+export const CreateDepartmentSchema = z.object({
    name: z
       .string()
       .min(3, {
@@ -19,4 +19,4 @@ export const CreateCategorySchema = z.object({
       .optional(),
 });
 
-export type CreateCategorySchemaType = z.infer<typeof CreateCategorySchema>;
+export type CreateDepartmentSchemaType = z.infer<typeof CreateDepartmentSchema>;

@@ -22,14 +22,20 @@ export async function createCategory(form: CreateCategorySchemaType) {
       redirect(DEFAULT_LOGOUT_REDIRECT);
    }
 
-   const { name, icon, type } = parsedBody.data;
+   const { name, icon, type, description } = parsedBody.data;
+
+   console.log(name);
+   console.log(icon);
+   console.log(type);
+   console.log(description);
 
    return await prisma.category.create({
       data: {
-         userId: user.user.id,
+         userId: user?.user?.id,
          name,
          icon,
          type,
+         description,
       },
    });
 }

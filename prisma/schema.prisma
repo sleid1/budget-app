@@ -36,15 +36,15 @@ model User {
 }
 
 model Department {
-  id          String    @id @default(cuid())
+  id          String  @id @default(cuid())
   name        String
   description String?
-  invoices    Invoice[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  User      User      @relation(fields: [userId], references: [id])
   userId    String
+  Invoice   Invoice[]
 }
 
 model Category {
@@ -52,12 +52,14 @@ model Category {
   name        String
   description String?
   type        InvoiceType
-  userId      String
-  icon        String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  Invoices    Invoice[]
-  User        User        @relation(fields: [userId], references: [id])
+
+  icon      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Invoices  Invoice[]
+
+  userId String
+  User   User   @relation(fields: [userId], references: [id])
 
   @@unique([name, type])
 }
@@ -87,35 +89,45 @@ model Invoice {
   date          DateTime
   datePaid      DateTime?
   status        InvoiceStatus @default(NEPLACENO)
-  category      String
-  categoryIcon  String
-  categoryId    Int
-  categoryRel   Category      @relation(fields: [categoryId], references: [id])
 
-  department   Department @relation(fields: [departmentId], references: [id])
-  departmentId String
+  // Related fields
+  categoryId       Int?
+  categoryRel      Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryOriginal String? // Pohrani originalnu kategoriju
 
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  departmentId       String?
+  departmentRel      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  departmentOriginal String? // Pohrani originalni department
+
+  userId       String?
+  userRel      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userOriginal String? // Pohrani originalnog usera
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model MonthHistory {
-  day     Int
-  month   Int
-  year    Int
-  income  Float
-  expense Float
+  day        Int
+  month      Int
+  year       Int
+  income     Float
+  expense    Float
+  vatPaid    Float
+  vatOwed    Float
+  vatBalance Float
 
   @@id([day, month, year])
 }
 
 model YearHistory {
-  month   Int
-  year    Int
-  income  Float
-  expense Float
+  month      Int
+  year       Int
+  income     Float
+  expense    Float
+  vatPaid    Float
+  vatOwed    Float
+  vatBalance Float
 
   @@id([month, year])
 }

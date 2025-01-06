@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const CreateInvoiceSchema = z.object({
-   invoiceNumber: z.string().min(1, "Broj računa je obavezan"),
+   invoiceNumber: z.string().min(1, { message: "Broj računa je obavezan" }),
    netAmount: z.coerce
       .number()
       .positive("Neto iznos mora biti pozitivan broj")
@@ -23,8 +23,13 @@ export const CreateInvoiceSchema = z.object({
    type: z.enum(["ULAZNI_RACUN", "IZLAZNI_RACUN"], {
       required_error: "Vrsta računa je obavezna",
    }),
-   description: z.string().optional(),
-   date: z.coerce.date({
+   description: z
+      .string()
+      .max(200, {
+         message: "Opis može imati maksimalno 200 znakova",
+      })
+      .optional(),
+   dateIssued: z.coerce.date({
       required_error: "Datum je obavezan",
       invalid_type_error: "Datum mora biti valjani datum",
    }),
@@ -32,14 +37,13 @@ export const CreateInvoiceSchema = z.object({
    status: z.enum(["NEPLACENO", "PLACENO", "KASNJENJE", "STORNIRANO"], {
       required_error: "Status računa je obavezan",
    }),
-   category: z.string().min(1, "Kategorija je obavezna"),
+   categoryOriginal: z.string().min(1, "Kategorija je obavezna"),
    categoryIcon: z.string().optional(),
    categoryId: z
       .number()
       .int()
       .positive("ID kategorije mora biti pozitivan cijeli broj"),
    // departmentId: z.string().uuid("ID odjela mora biti valjani UUID"),
-   // userId: z.string().uuid("ID korisnika mora biti valjani UUID"),
 });
 
 export type CreateInvoiceSchemaType = z.infer<typeof CreateInvoiceSchema>;
