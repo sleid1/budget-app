@@ -37,7 +37,7 @@ model User {
 
 model Department {
   id          String  @id @default(cuid())
-  name        String
+  name        String  @unique
   description String?
 
   UserRel      User      @relation(fields: [userId], references: [id])
@@ -85,11 +85,11 @@ model Invoice {
   invoiceNumber String
   netAmount     Float
   vatAmount     Float
-  vatRate       Float         @default(25)
+  vatRate       Float
   grossAmount   Float
   type          InvoiceType
   description   String?
-  date          DateTime
+  dateIssued    DateTime
   datePaid      DateTime?
   status        InvoiceStatus @default(NEPLACENO)
 

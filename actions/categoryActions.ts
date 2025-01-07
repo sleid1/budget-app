@@ -13,7 +13,7 @@ export async function createCategory(form: CreateCategorySchemaType) {
    const parsedBody = CreateCategorySchema.safeParse(form);
 
    if (!parsedBody.success) {
-      throw new Error("Došlo je do pogreške. Molimo pokušajte ponovno");
+      throw new Error("Neispravan request");
    }
 
    const user = await auth();

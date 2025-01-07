@@ -14,20 +14,18 @@ import {
    PopoverContent,
    PopoverTrigger,
 } from "@/components/ui/popover";
-import { InvoiceType } from "@/lib/types";
-import { Category } from "@prisma/client";
+import { Category, Department } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import CreateCategoryDialog from "./CreateCategoryDialog";
+import CreateDepartmentDialog from "./CreateDepartmentDialog";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
-   type: InvoiceType;
    onChange: (value: Category) => void;
 }
 
-const CategoryPicker = ({ type, onChange }: Props) => {
+const DepartmentPicker = ({ onChange }: Props) => {
    const [open, setOpen] = useState(false);
    const [value, setValue] = useState("");
 
@@ -36,19 +34,18 @@ const CategoryPicker = ({ type, onChange }: Props) => {
       onChange(value);
    }, [onChange, value]);
 
-   const categoriesQuery = useQuery({
-      queryKey: ["categories", type],
-      queryFn: () =>
-         fetch(`/api/categories?type=${type}`).then((res) => res.json()),
+   const departmentsQuery = useQuery({
+      queryKey: ["departments"],
+      queryFn: () => fetch("/api/departments").then((res) => res.json()),
    });
 
-   const selectedCategory = categoriesQuery.data?.find(
-      (category: Category) => category.name === value.name
+   const selectedDepartment = departmentsQuery.data?.find(
+      (department: Department) => department.name === value.name
    );
 
    const successCallback = useCallback(
-      (category: Category) => {
-         setValue(category);
+      (department: Department) => {
+         setValue(department);
          setOpen((prev) => !prev);
       },
       [setValue, setOpen]
@@ -63,48 +60,50 @@ const CategoryPicker = ({ type, onChange }: Props) => {
                aria-expanded={open}
                className="justify-between w-full"
             >
-               {selectedCategory ? (
-                  <CategoryRow category={selectedCategory} />
+               {selectedDepartment ? (
+                  <DepartmentRow department={selectedDepartment} />
                ) : (
-                  "Odaberi kategoriju"
+                  "Odaberi odjel"
                )}
-               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+
+               <ChevronsUpDown className="ml-2 w-4 h-4 shrink-0 opacity-50" />
             </Button>
          </PopoverTrigger>
+
          <PopoverContent className="w-[400px] p-0">
             <Command
                onSubmit={(e) => {
                   e.preventDefault();
                }}
             >
-               <CommandInput placeholder="Pretraži kategorije..." />
-               <CreateCategoryDialog
-                  type={type}
-                  successCallback={successCallback}
-               />
+               <CommandInput placeholder="Pronađi odjel..."></CommandInput>
+
+               <CreateDepartmentDialog successCallback={successCallback} />
                <CommandEmpty>
-                  <p>Kategorija nije pronađena</p>
+                  <p>Odjel nije pronađen</p>
                   <p className="text-xs text-muted-foreground">
-                     Kreiraj novu kategoriju
+                     Kreiraj novi odjel
                   </p>
                </CommandEmpty>
+
                <CommandGroup>
                   <CommandList>
-                     {categoriesQuery.data &&
-                        categoriesQuery.data.map((category: Category) => (
+                     {departmentsQuery.data &&
+                        departmentsQuery.data.map((department: Department) => (
                            <CommandItem
-                              key={category.name}
+                              key={department.name}
                               onSelect={() => {
-                                 setValue(category);
+                                 setValue(department);
+
                                  setOpen((prev) => !prev);
                               }}
                            >
-                              <CategoryRow category={category} />
+                              <DepartmentRow department={department} />
+
                               <Check
                                  className={cn(
                                     "mr-2 w-4 h-4 opacity-0",
-                                    value.name === category.name &&
-                                       "opacity-100"
+                                    value === department.name && "opacity-100"
                                  )}
                               />
                            </CommandItem>
@@ -117,13 +116,12 @@ const CategoryPicker = ({ type, onChange }: Props) => {
    );
 };
 
-export default CategoryPicker;
+export default DepartmentPicker;
 
-function CategoryRow({ category }: { category: Category }) {
+function DepartmentRow({ department }: { department: Department }) {
    return (
       <div className="flex items-center gap-2">
-         <span role="img">{category.icon}</span>
-         <span>{category.name}</span>
+         <span>{department.name}</span>
       </div>
    );
 }

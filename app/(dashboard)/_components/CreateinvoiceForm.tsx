@@ -47,7 +47,10 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createInvoice } from "@/actions/invoiceActions";
 import { toast } from "sonner";
-import { Category } from "@prisma/client";
+import { Category, Department } from "@prisma/client";
+import DepartmentPicker from "./DepartmentPicker";
+import { useRouter } from "next/navigation";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 interface Props {
    type: InvoiceType;
@@ -56,12 +59,16 @@ interface Props {
 const CreateInvoiceForm = ({ type }: Props) => {
    const [isVatEditable, setIsVatEditable] = useState(false);
 
+   const router = useRouter();
+
    const form = useForm<CreateInvoiceSchemaType>({
       resolver: zodResolver(CreateInvoiceSchema),
       defaultValues: {
          invoiceNumber: "",
          categoryOriginal: "",
          categoryId: "",
+         departmentOriginal: "",
+         departmentId: "",
          dateIssued: new Date(),
          vatRate: 25,
          netAmount: 0,
@@ -83,13 +90,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
    const netAmount = parseFloat(watch("netAmount"));
    const vatRate = parseFloat(watch("vatRate"));
    const vatAmount = parseFloat(watch("vatAmount"));
-
-   useEffect(() => {
-      console.log(form.getValues());
-      if (Object.keys(errors).length > 0) {
-         console.log("Form errors:", errors);
-      }
-   }, [errors]);
 
    useEffect(() => {
       if (status === "NEPLACENO") {
@@ -128,6 +128,14 @@ const CreateInvoiceForm = ({ type }: Props) => {
       [form]
    );
 
+   const handleDepartmentChange = useCallback(
+      (department: Department) => {
+         form.setValue("departmentOriginal", department.name);
+         form.setValue("departmentId", department.id);
+      },
+      [form]
+   );
+
    const queryClient = useQueryClient();
 
    const { mutate, isPending } = useMutation({
@@ -144,9 +152,11 @@ const CreateInvoiceForm = ({ type }: Props) => {
          queryClient.invalidateQueries({
             queryKey: ["overview"],
          });
+
+         router.push(DEFAULT_LOGIN_REDIRECT);
       },
       onError: (error) => {
-         console.error("Mutation failed:", error);
+         console.error("Neuspješna mutacija", error);
          toast.error("Greška pri kreiranju računa");
       },
    });
@@ -235,6 +245,30 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         )}
                      />
                   </div>
+
+                  <Separator />
+                  <p>Odjel</p>
+
+                  <div className="grid md:grid-cols-4 gap-4">
+                     <FormField
+                        control={form.control}
+                        name="departmentOriginal"
+                        render={({ field }) => (
+                           <FormItem className="md:col-span-2">
+                              <FormLabel>Odjel</FormLabel>
+                              <FormControl>
+                                 <DepartmentPicker
+                                    onChange={handleDepartmentChange}
+                                 />
+                              </FormControl>
+                              <FormMessage>
+                                 {errors.departmentOriginal?.message}
+                              </FormMessage>
+                           </FormItem>
+                        )}
+                     />
+                  </div>
+
                   <Separator />
                   <p>Podaci o računu</p>
                   <div className="grid md:grid-cols-3 gap-4">
@@ -518,6 +552,8 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         type="button"
                         variant="secondary"
                         onClick={() => {
+                           console.log(form.getValues());
+                           console.log("Form validation errors:", errors);
                            form.reset();
                         }}
                      >

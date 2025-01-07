@@ -9,7 +9,7 @@ const Pregled = async () => {
          <div className="border-b bg-card">
             <div className="container flex flex-wrap items-center justify-between gap-6 py-8">
                <p className="text-3xl font-bold">
-                  Dobrodošao, {session?.user.name} !
+                  Dobrodošao/la, {session?.user.name} !
                </p>
 
                <CreateInvoiceButtons />

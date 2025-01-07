@@ -43,7 +43,8 @@ export const CreateInvoiceSchema = z.object({
       .number()
       .int()
       .positive("ID kategorije mora biti pozitivan cijeli broj"),
-   // departmentId: z.string().uuid("ID odjela mora biti valjani UUID"),
+   departmentId: z.string().cuid("ID odjela mora biti valjani CUID"),
+   departmentOriginal: z.string().min(1, "Odjel je obavezan"),
 });
 
 export type CreateInvoiceSchemaType = z.infer<typeof CreateInvoiceSchema>;

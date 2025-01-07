@@ -9,8 +9,6 @@ export const CreateDepartmentSchema = z.object({
       .max(20, {
          message: "Ime kategorije može imati maksimalno 20 slova",
       }),
-   icon: z.string().max(20),
-   type: z.enum(["IZLAZNI_RACUN", "ULAZNI_RACUN"]),
    description: z
       .string()
       .max(200, {

@@ -35,6 +35,8 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
       status,
       categoryOriginal,
       categoryId,
+      departmentOriginal,
+      departmentId,
       categoryIcon,
    } = parsedBody.data;
 
@@ -50,9 +52,12 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
       status,
       categoryOriginal,
       categoryId,
+      departmentOriginal,
+      departmentId,
       categoryIcon: categoryIcon || "",
       description: description || "",
       userId: user?.user?.id,
+      userOriginal: `${user?.user?.name} ${user?.user?.lastName}`,
    });
 
    console.log("Data for Month History Upsert:", {
@@ -117,9 +122,11 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
                status,
                categoryOriginal,
                categoryId,
-               categoryIcon: categoryIcon || "",
+               departmentOriginal,
+               departmentId,
                description: description || "",
                userId: user?.user?.id,
+               userOriginal: `${user?.user?.name} ${user?.user?.lastName}`,
             },
          }),
 
@@ -208,7 +215,7 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
          }),
       ]);
    } catch (error) {
-      console.log("Transaction failed:", error);
+      console.log("Transaction failed:", error.message);
       throw error;
    }
 }
