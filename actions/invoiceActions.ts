@@ -118,7 +118,7 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
                grossAmount,
                type,
                dateIssued,
-               datePaid,
+               datePaid: datePaid || null,
                status,
                categoryOriginal,
                categoryId,
@@ -215,7 +215,7 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
          }),
       ]);
    } catch (error) {
-      console.log("Transaction failed:", error.message);
+      console.error("Transaction failed:", error.message);
       throw error;
    }
 }

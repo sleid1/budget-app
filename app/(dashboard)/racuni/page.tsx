@@ -11,7 +11,7 @@ const Racuni = () => {
    return (
       <Card className="container">
          <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-6 py-8">
                <div className="">
                   <CardTitle className="text-3xl font-bold">Računi</CardTitle>
                   <CardDescription>Upravljaj svojim računima</CardDescription>

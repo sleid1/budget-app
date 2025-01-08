@@ -21,16 +21,6 @@ export default auth((req) => {
 
    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-   // Redirect unauthenticated users accessing `/` to DEFAULT_LOGOUT_REDIRECT
-   if (nextUrl.pathname === "/") {
-      return Response.redirect(
-         new URL(
-            isLoggedIn ? DEFAULT_LOGIN_REDIRECT : DEFAULT_LOGOUT_REDIRECT,
-            nextUrl
-         )
-      );
-   }
-
    if (isApiAuthRoute) {
       return;
    }

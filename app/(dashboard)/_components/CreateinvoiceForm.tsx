@@ -51,6 +51,8 @@ import { Category, Department } from "@prisma/client";
 import DepartmentPicker from "./DepartmentPicker";
 import { useRouter } from "next/navigation";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import Link from "next/link";
+import { DateToUTCDate } from "@/utils/helpers";
 
 interface Props {
    type: InvoiceType;
@@ -58,6 +60,10 @@ interface Props {
 
 const CreateInvoiceForm = ({ type }: Props) => {
    const [isVatEditable, setIsVatEditable] = useState(false);
+
+   //STATE FOR CONTROLING CALENDAR VISIBILITIES
+   const [dateIssuedPopoverOpen, setDateIssuedPopoverOpen] = useState(false);
+   const [datePaidPopoverOpen, setDatePaidPopoverOpen] = useState(false);
 
    const router = useRouter();
 
@@ -169,6 +175,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
          mutate({
             ...values,
+            dateIssued: DateToUTCDate(values.dateIssued),
+            datePaid: values.datePaid
+               ? DateToUTCDate(values.datePaid)
+               : undefined,
          });
       },
       [mutate]
@@ -276,13 +286,12 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         control={form.control}
                         name="dateIssued"
                         render={({ field }) => {
-                           const [isOpen, setIsOpen] = useState(false);
                            return (
                               <FormItem>
                                  <FormLabel>Datum izdavanja</FormLabel>
                                  <Popover
-                                    open={isOpen}
-                                    onOpenChange={setIsOpen}
+                                    open={dateIssuedPopoverOpen}
+                                    onOpenChange={setDateIssuedPopoverOpen}
                                  >
                                     <PopoverTrigger asChild>
                                        <FormControl>
@@ -313,9 +322,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                        <Calendar
                                           mode="single"
                                           selected={field.value}
-                                          onSelect={(date) => {
-                                             field.onChange(date);
-                                             setIsOpen((prev) => !prev);
+                                          onSelect={(value) => {
+                                             if (!value) return;
+                                             field.onChange(value);
+                                             setDateIssuedPopoverOpen(false);
                                           }}
                                           initialFocus
                                           locale={hr}
@@ -371,14 +381,12 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         control={form.control}
                         name="datePaid"
                         render={({ field }) => {
-                           const [isOpen, setIsOpen] = useState(false);
-
                            return (
                               <FormItem>
                                  <FormLabel>Datum uplate</FormLabel>
                                  <Popover
-                                    open={isOpen}
-                                    onOpenChange={setIsOpen}
+                                    open={datePaidPopoverOpen}
+                                    onOpenChange={setDatePaidPopoverOpen}
                                  >
                                     <PopoverTrigger asChild>
                                        <FormControl>
@@ -411,9 +419,10 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                        <Calendar
                                           mode="single"
                                           selected={field.value}
-                                          onSelect={(date) => {
-                                             field.onChange(date);
-                                             setIsOpen((prev) => !prev);
+                                          onSelect={(value) => {
+                                             if (!value) return;
+                                             field.onChange(value);
+                                             setDatePaidPopoverOpen(false);
                                           }}
                                           initialFocus
                                           locale={hr}
@@ -548,6 +557,9 @@ const CreateInvoiceForm = ({ type }: Props) => {
                   />
 
                   <div className="flex gap-2">
+                     <Button asChild variant="secondary">
+                        <Link href="/pregled">Otkaži</Link>
+                     </Button>
                      <Button
                         type="button"
                         variant="secondary"

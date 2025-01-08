@@ -11,6 +11,7 @@ import { ThemeSwitcherButton } from "./ThemeSwitcherButton";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { signOutAction } from "@/actions/authActions";
+import { LogoutButton } from "./auth/SignOutButton";
 
 const Navbar = () => {
    return (
@@ -61,11 +62,7 @@ function MobileNavbar() {
                      <div className="flex justify-center">
                         <ThemeSwitcherButton />
                      </div>
-                     <form action={signOutAction}>
-                        <Button type="submit" className="w-full">
-                           Odjavi se
-                        </Button>
-                     </form>
+                     <LogoutButton />
                   </div>
                </SheetContent>
             </Sheet>
@@ -92,9 +89,7 @@ function DesktopNavbar() {
                </div>
                <div className="flex items-center gap-2">
                   <ThemeSwitcherButton />
-                  <form action={signOutAction}>
-                     <Button type="submit">Odjavi se</Button>
-                  </form>
+                  <LogoutButton />
                </div>
             </div>
          </nav>

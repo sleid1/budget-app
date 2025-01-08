@@ -103,7 +103,8 @@ const DepartmentPicker = ({ onChange }: Props) => {
                               <Check
                                  className={cn(
                                     "mr-2 w-4 h-4 opacity-0",
-                                    value === department.name && "opacity-100"
+                                    value.name === department.name &&
+                                       "opacity-100"
                                  )}
                               />
                            </CommandItem>

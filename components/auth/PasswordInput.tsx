@@ -23,8 +23,6 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 }) => {
    const [showPassword, setShowPassword] = useState(false);
 
-   console.log(!!value);
-
    return (
       <div className="relative w-full">
          <Input
@@ -36,20 +34,23 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
             onChange={onChange}
             className="pr-10"
          />
-         <Button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute inset-y-0 right-3 flex items-center"
-            disabled={!value || disabled}
-            variant="ghost"
-            aria-label={showPassword ? "Hide password" : "Show password"}
-         >
-            {showPassword ? (
-               <EyeOff className="w-5 h-5" />
-            ) : (
-               <Eye className="w-5 h-5" />
+         {value &&
+            value.length > 0 && ( // Show button only if the value length is greater than 0
+               <Button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center"
+                  disabled={disabled}
+                  variant="ghost"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+               >
+                  {showPassword ? (
+                     <EyeOff className="w-5 h-5" />
+                  ) : (
+                     <Eye className="w-5 h-5" />
+                  )}
+               </Button>
             )}
-         </Button>
       </div>
    );
 };

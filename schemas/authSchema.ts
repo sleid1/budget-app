@@ -17,7 +17,7 @@ export const LoginSchema = z.object({
       message: "Ovo polje je obavezno",
    }),
    password: z.string().min(6, {
-      message: "Lozinka mora sadržavati minimalno 6 znakova",
+      message: "Ovo polje je obavezno",
    }),
 });
 
