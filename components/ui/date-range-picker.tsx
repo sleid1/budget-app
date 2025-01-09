@@ -21,6 +21,7 @@ import {
    CheckIcon,
 } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
+import { hr } from "date-fns/locale";
 
 export interface DateRangePickerProps {
    /** Click handler for applying the updates from DateRangePicker. */
@@ -75,15 +76,15 @@ interface Preset {
 
 // Define presets
 const PRESETS: Preset[] = [
-   { name: "today", label: "Today" },
-   { name: "yesterday", label: "Yesterday" },
-   { name: "last7", label: "Last 7 days" },
-   { name: "last14", label: "Last 14 days" },
-   { name: "last30", label: "Last 30 days" },
-   { name: "thisWeek", label: "This Week" },
-   { name: "lastWeek", label: "Last Week" },
-   { name: "thisMonth", label: "This Month" },
-   { name: "lastMonth", label: "Last Month" },
+   { name: "today", label: "Danas" },
+   { name: "yesterday", label: "Jučer" },
+   { name: "last7", label: "Zadnjih 7 dana" },
+   { name: "last14", label: "Zadnjih 14 dana" },
+   { name: "last30", label: "Zadnjih 30 dana" },
+   { name: "thisWeek", label: "Ovaj tjedan" },
+   { name: "lastWeek", label: "Prošli tjedan" },
+   { name: "thisMonth", label: "Ovaj mjesec" },
+   { name: "lastMonth", label: "Prošli mjesec" },
 ];
 
 /** The DateRangePicker component allows a user to select a range of dates */
@@ -502,7 +503,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                            }}
                         >
                            <SelectTrigger className="w-[180px] mx-auto mb-2">
-                              <SelectValue placeholder="Select..." />
+                              <SelectValue placeholder="Odaberi..." />
                            </SelectTrigger>
                            <SelectContent>
                               {PRESETS.map((preset) => (
@@ -518,6 +519,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                      )}
                      <div>
                         <Calendar
+                           locale={hr}
                            mode="range"
                            onSelect={(
                               value: { from?: Date; to?: Date } | undefined
@@ -563,7 +565,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                   }}
                   variant="ghost"
                >
-                  Cancel
+                  Odustani
                </Button>
                <Button
                   onClick={() => {
@@ -579,7 +581,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                      }
                   }}
                >
-                  Update
+                  Odaberi
                </Button>
             </div>
          </PopoverContent>

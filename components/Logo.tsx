@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import LogoIcon from "@/public/diamond-logo.png";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 type LogoProps = {
    className?: string;
@@ -10,7 +11,7 @@ type LogoProps = {
 
 const Logo = ({ className }: LogoProps) => {
    return (
-      <Link href="/" className={cn(className)}>
+      <Link href={DEFAULT_LOGIN_REDIRECT} className={cn(className)}>
          <Image
             width="100"
             height="100"

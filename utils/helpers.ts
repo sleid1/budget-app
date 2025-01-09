@@ -11,3 +11,10 @@ export function DateToUTCDate(date: Date) {
       )
    );
 }
+
+export function FormatterForCurrency(currency: string) {
+   return new Intl.NumberFormat("hr-HR", {
+      style: "currency",
+      currency: "EUR",
+   });
+}
