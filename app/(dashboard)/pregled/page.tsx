@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import CreateInvoiceButtons from "../_components/CreateInvoiceButtons";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import Overview from "../_components/Overview";
+import History from "../_components/History";
 
 const Pregled = async () => {
    const session = await auth();
@@ -22,6 +23,7 @@ const Pregled = async () => {
             </CardHeader>
          </Card>
          <Overview />
+         <History />
       </div>
    );
 };

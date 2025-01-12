@@ -75,7 +75,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
          categoryId: "",
          departmentOriginal: "",
          departmentId: "",
-         dateIssued: new Date(),
          vatRate: 25,
          netAmount: 0,
          grossAmount: 0,

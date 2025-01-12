@@ -3,10 +3,11 @@
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { MAX_DATE_RANGE_DAYS } from "@/lib/constants";
 import { differenceInDays, startOfMonth } from "date-fns";
+import { hr } from "date-fns/locale";
 import { useState } from "react";
 import { toast } from "sonner";
-import { hr } from "date-fns/locale";
 import StatsCards from "./StatsCards";
+import CategoriesStats from "./CategoriesStats";
 
 const Overview = () => {
    const [dateRange, setDateRange] = useState({
@@ -40,7 +41,11 @@ const Overview = () => {
                />
             </div>
          </div>
-         <StatsCards from={dateRange.from} to={dateRange.to} />
+         <div className="container space-y-6">
+            <StatsCards from={dateRange.from} to={dateRange.to} />
+
+            <CategoriesStats from={dateRange.from} to={dateRange.to} />
+         </div>
       </>
    );
 };
