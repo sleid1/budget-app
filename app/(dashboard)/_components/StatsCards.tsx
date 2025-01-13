@@ -10,7 +10,7 @@ import {
    TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { DateToUTCDate, formatToCurrency } from "@/utils/helpers";
+import { formatToCurrency } from "@/utils/helpers";
 import { useQuery } from "@tanstack/react-query";
 import {
    AlertCircle,
@@ -32,11 +32,9 @@ const StatsCards = ({ from, to }: Props) => {
    const statsQuery = useQuery<GetBalanceStatsResponseType>({
       queryKey: ["overview", "stats", from, to],
       queryFn: () =>
-         fetch(
-            `/api/stats/balance?from=${DateToUTCDate(from)}&to=${DateToUTCDate(
-               to
-            )}`
-         ).then((res) => res.json()),
+         fetch(`/api/stats/balance?from=${from}&to=${to}`).then((res) =>
+            res.json()
+         ),
    });
 
    const income = statsQuery.data?.income || 0;
@@ -46,6 +44,10 @@ const StatsCards = ({ from, to }: Props) => {
 
    const amountBalance = income - expense;
    const vatBalance = vatPaid - vatOwed;
+
+   const formatter = useMemo(() => {
+      return formatToCurrency();
+   }, []);
 
    const tooltipExplanations = useMemo(
       () => ({
@@ -115,6 +117,7 @@ const StatsCards = ({ from, to }: Props) => {
          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 w-full">
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={income}
                   title="Prihodi"
                   icon={
@@ -126,6 +129,7 @@ const StatsCards = ({ from, to }: Props) => {
             </SkeletonWrapper>
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={expense}
                   title="Rashodi"
                   icon={
@@ -137,6 +141,7 @@ const StatsCards = ({ from, to }: Props) => {
             </SkeletonWrapper>
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={amountBalance}
                   title="Stanje"
                   icon={
@@ -151,6 +156,7 @@ const StatsCards = ({ from, to }: Props) => {
          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 w-full">
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={vatPaid}
                   title="Ulazni PDV"
                   icon={
@@ -163,6 +169,7 @@ const StatsCards = ({ from, to }: Props) => {
 
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={vatOwed}
                   title="Izlazni PDV"
                   icon={
@@ -175,6 +182,7 @@ const StatsCards = ({ from, to }: Props) => {
 
             <SkeletonWrapper isLoading={statsQuery.isFetching}>
                <StatCard
+                  formatter={formatter}
                   value={vatBalance}
                   title="Stanje PDV"
                   icon={
@@ -197,16 +205,20 @@ function StatCard({
    icon,
    tooltip = false,
    tooltipText,
+   formatter,
 }: {
    icon: ReactNode;
    title: string;
    value: number;
    tooltip?: boolean;
    tooltipText?: ReactNode;
+   formatter: Intl.NumberFormat;
 }) {
    const formattingFn = useCallback(
-      (value: number) => formatToCurrency(value),
-      []
+      (value: number) => {
+         return formatter.format(value);
+      },
+      [formatter]
    );
 
    return (

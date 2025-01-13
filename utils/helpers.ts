@@ -1,3 +1,12 @@
+/*
+ * Sets the time of a given Date object to the start of the day in UTC (00:00:00.000).
+ */
+export function setUTCStartOfDay(date: Date): Date {
+   return new Date(
+      Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+   );
+}
+
 export function DateToUTCDate(date: Date) {
    return new Date(
       Date.UTC(
@@ -12,13 +21,9 @@ export function DateToUTCDate(date: Date) {
    );
 }
 
-export function formatToCurrency(value?: number): string {
-   if (typeof value !== "number") {
-      return "Format broja nije ispravan";
-   }
-
+export function formatToCurrency(value?: number): Intl.NumberFormat {
    return new Intl.NumberFormat("hr-HR", {
       style: "currency",
       currency: "EUR",
-   }).format(value);
+   });
 }

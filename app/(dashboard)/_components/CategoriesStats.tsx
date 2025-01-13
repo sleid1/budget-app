@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InvoiceType } from "@/lib/types";
-import { DateToUTCDate, formatToCurrency } from "@/utils/helpers";
+import { formatToCurrency } from "@/utils/helpers";
 import { useQuery } from "@tanstack/react-query";
 import React, { useMemo } from "react";
 
@@ -17,23 +17,31 @@ const CategoriesStats = ({ from, to }: Props) => {
    const statsQuery = useQuery<GetCategoriesStatsResponseType>({
       queryKey: ["overview", "stats", "categories", from, to],
       queryFn: () =>
-         fetch(
-            `/api/stats/categories?from=${DateToUTCDate(
-               from
-            )}&to=${DateToUTCDate(to)}`
-         ).then((res) => res.json()),
+         fetch(`/api/stats/categories?from=${from}&to=${to}`).then((res) =>
+            res.json()
+         ),
    });
 
-   console.log(statsQuery.data);
+   const formatter = useMemo(() => {
+      return formatToCurrency();
+   }, []);
 
    return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 w-full">
          <SkeletonWrapper isLoading={statsQuery.isFetching}>
-            <CategoriesCard type="IZLAZNI_RACUN" data={statsQuery.data || []} />
+            <CategoriesCard
+               type="IZLAZNI_RACUN"
+               data={statsQuery.data || []}
+               formatter={formatter}
+            />
          </SkeletonWrapper>
 
          <SkeletonWrapper isLoading={statsQuery.isFetching}>
-            <CategoriesCard type="ULAZNI_RACUN" data={statsQuery.data || []} />
+            <CategoriesCard
+               type="ULAZNI_RACUN"
+               data={statsQuery.data || []}
+               formatter={formatter}
+            />
          </SkeletonWrapper>
       </div>
    );
@@ -44,20 +52,18 @@ export default CategoriesStats;
 function CategoriesCard({
    type,
    data,
+   formatter,
 }: {
    type: InvoiceType;
    data: GetCategoriesStatsResponseType;
+   formatter: Intl.NumberFormat;
 }) {
    const filteredData = data.filter((el) => el.type === type);
-
-   console.log(filteredData);
 
    const total = filteredData.reduce(
       (acc, el) => acc + (el._sum?.grossAmount || 0),
       0
    );
-
-   console.log(total);
 
    return (
       <Card className="h-80 w-full">
@@ -86,7 +92,6 @@ function CategoriesCard({
                      {filteredData.map((item) => {
                         const amount = item._sum.grossAmount || 0;
                         const percentage = (amount * 100) / (total || amount);
-                        console.log(item);
 
                         return (
                            <div
@@ -95,14 +100,14 @@ function CategoriesCard({
                            >
                               <div className="flex items-center justify-between">
                                  <span className="flex items-center text-gray-400">
-                                    {item.category.icon} {item.category.name}
+                                    {item.category?.icon} {item.category?.name}
                                     <span className="ml-2 text-xs text-muted-foreground">
                                        ( {percentage.toFixed(0)} % )
                                     </span>
                                  </span>
 
                                  <span className="text-sm text-gray-400">
-                                    {formatToCurrency(amount)}
+                                    {formatter.format(amount)}
                                  </span>
                               </div>
 

@@ -8,11 +8,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import StatsCards from "./StatsCards";
 import CategoriesStats from "./CategoriesStats";
+import { setUTCStartOfDay } from "@/utils/helpers";
 
 const Overview = () => {
    const [dateRange, setDateRange] = useState({
       from: startOfMonth(new Date()),
-      to: new Date(),
+      to: setUTCStartOfDay(new Date()),
    });
 
    return (
@@ -36,7 +37,10 @@ const Overview = () => {
                         );
                         return;
                      }
-                     setDateRange({ from, to });
+                     setDateRange({
+                        from,
+                        to,
+                     });
                   }}
                />
             </div>
