@@ -53,6 +53,8 @@ async function getCategoriesStats(from: Date, to: Date) {
       },
    });
 
+   console.log(groupedInvoices);
+
    // Fetch related category data for each categoryId
    const stats = await Promise.all(
       groupedInvoices.map(async (group) => {
