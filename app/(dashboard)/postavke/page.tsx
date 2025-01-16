@@ -131,9 +131,13 @@ function CategoryList({ type }: { type: InvoiceType }) {
             )}
 
             {dataAvailable && (
-               <div className="grid grid-flow-row gap-4 p-2 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+               <div className="grid grid-flow-row gap-8 p-2 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {categoriesQuery.data.map((category: Category) => (
-                     <CategoryCard category={category} key={category.name} />
+                     <CategoryCard
+                        category={category}
+                        key={category.name}
+                        refetch={categoriesQuery.refetch}
+                     />
                   ))}
                </div>
             )}
@@ -142,14 +146,22 @@ function CategoryList({ type }: { type: InvoiceType }) {
    );
 }
 
-function CategoryCard({ category }: { category: Category }) {
+function CategoryCard({
+   category,
+   refetch,
+}: {
+   category: Category;
+   refetch: () => void; // Define the prop for refetch
+}) {
    return (
       <div className="flex border-separate flex-col justify-between rounded-md border shadow-md shadow-black/[0.1] dark:shadow-white/[0.1]">
          <div className="flex flex-col items-center gap-2 p-4">
             <span className="text-3xl" role="img">
                {category.icon}
             </span>
-            <span>{category.name}</span>
+            <span>
+               {category.name} ({category._count.invoices})
+            </span>
          </div>
          <div className="grid grid-cols-2 gap-2">
             <DeleteCategoryDialog
@@ -165,13 +177,21 @@ function CategoryCard({ category }: { category: Category }) {
                }
             />
 
-            <Button
-               className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-blue-500 hover:text-white"
-               variant="secondary"
-            >
-               <Pencil className="h-4 w-4" />
-               Ažuriraj
-            </Button>
+            <CreateCategoryDialog
+               mode="update"
+               category={category}
+               type={category.type}
+               successCallback={refetch}
+               trigger={
+                  <Button
+                     className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-blue-500 hover:text-white"
+                     variant="secondary"
+                  >
+                     <Pencil className="h-4 w-4" />
+                     Ažuriraj
+                  </Button>
+               }
+            />
          </div>
       </div>
    );

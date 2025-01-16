@@ -39,7 +39,7 @@ import { useForm } from "react-hook-form";
 import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createCategory } from "@/actions/categoryActions";
+import { createCategory, updateCategory } from "@/actions/categoryActions";
 import { Category } from "@prisma/client";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -48,19 +48,29 @@ import { Textarea } from "@/components/ui/textarea";
 interface Props {
    type: InvoiceType;
    successCallback: (category: Category) => void;
-   trigger?: ReactNode;
+   trigger?: React.ReactNode;
+   category?: Category;
+   mode?: "create" | "update";
 }
 
-const CreateCategoryDialog = ({ type, successCallback, trigger }: Props) => {
+const CreateCategoryDialog = ({
+   type,
+   successCallback,
+   trigger,
+   category,
+   mode = "create",
+}: Props) => {
    const [open, setOpen] = useState(false);
+
+   const isEditMode = mode === "update";
 
    const form = useForm<CreateCategorySchemaType>({
       resolver: zodResolver(CreateCategorySchema),
       defaultValues: {
-         name: "",
-         icon: "",
-         description: "",
-         type,
+         name: category?.name || "",
+         icon: category?.icon || "",
+         description: category?.description || "",
+         type: category?.type || type,
       },
    });
 
@@ -73,28 +83,37 @@ const CreateCategoryDialog = ({ type, successCallback, trigger }: Props) => {
    const theme = useTheme();
 
    const { mutate, isPending } = useMutation({
-      mutationFn: createCategory,
-      onSuccess: async (data: Category) => {
+      mutationFn: isEditMode ? updateCategory : createCategory,
+      onSuccess: async (response: Category) => {
+         if (response.success) {
+            toast.success(
+               isEditMode
+                  ? `Kategorija ${response.data?.name} je uspješno ažurirana`
+                  : `Kategorija ${response.data?.name} je uspješno kreirana`,
+               { id: "create-category" }
+            );
+
+            successCallback(response.data);
+
+            await queryClient.invalidateQueries({
+               queryKey: ["categories"],
+            });
+         } else {
+            toast.error(response.message || "Došlo je do pogreške", {
+               id: "create-category",
+            });
+         }
+
          form.reset({
             name: "",
             icon: "",
             description: "",
             type,
-         }),
-            toast.success(`Kategorija ${data.name} je uspješno kreirana`, {
-               id: "create-category",
-            });
-
-         successCallback(data);
-
-         await queryClient.invalidateQueries({
-            queryKey: ["categories"],
          });
-
-         setOpen((prev) => !prev);
+         setOpen(false);
       },
-      onError: (error) => {
-         toast.error(error.message, {
+      onError: (error: any) => {
+         toast.error(error.message || "Došlo je do pogreške", {
             id: "create-category",
          });
       },
@@ -102,12 +121,14 @@ const CreateCategoryDialog = ({ type, successCallback, trigger }: Props) => {
 
    const onSubmit = useCallback(
       (values: CreateCategorySchemaType) => {
-         toast.loading("Kreiranje kategorije...", {
-            id: "create-category",
-         });
-         mutate(values);
+         toast.loading(
+            isEditMode ? "Ažuriranje kategorije..." : "Kreiranje kategorije...",
+            { id: "create-category" }
+         );
+         const payload = isEditMode ? { id: category?.id, ...values } : values;
+         mutate(payload);
       },
-      [mutate]
+      [mutate, isEditMode, category]
    );
 
    return (
@@ -121,14 +142,14 @@ const CreateCategoryDialog = ({ type, successCallback, trigger }: Props) => {
                   className="flex border-separate items-center justify-start rounded-none border-b px-3 py-3 text-muted-foreground"
                >
                   <PlusSquare className="mr-2 h-4 w-4" />
-                  Kreiraj novu kategoriju
+                  {isEditMode ? "Uredi kategoriju" : "Kreiraj novu kategoriju"}
                </Button>
             )}
          </DialogTrigger>
          <DialogContent>
             <DialogHeader>
                <DialogTitle>
-                  Kreiraj kategoriju
+                  {isEditMode ? "Uredi" : "Kreiraj"} kategoriju
                   <span
                      className={cn(
                         "mx-2 tracking-wider font-bold",
@@ -258,7 +279,11 @@ const CreateCategoryDialog = ({ type, successCallback, trigger }: Props) => {
                   disabled={isPending}
                >
                   {!isPending ? (
-                     "Kreiraj kategoriju"
+                     isEditMode ? (
+                        "Ažuriraj kategoriju"
+                     ) : (
+                        "Kreiraj kategoriju"
+                     )
                   ) : (
                      <Loader2 className="animate-spin" />
                   )}

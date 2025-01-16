@@ -1,11 +1,8 @@
 "use client";
-import {
-   Card,
-   CardContent,
-   CardDescription,
-   CardHeader,
-   CardTitle,
-} from "@/components/ui/card";
+import { createInvoice } from "@/actions/invoiceActions";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
    Form,
    FormControl,
@@ -14,6 +11,12 @@ import {
    FormLabel,
    FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+   Popover,
+   PopoverContent,
+   PopoverTrigger,
+} from "@/components/ui/popover";
 import {
    Select,
    SelectContent,
@@ -21,38 +24,29 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { InvoiceType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import {
    CreateInvoiceSchema,
    CreateInvoiceSchemaType,
 } from "@/schemas/invoice";
+import { DateToUTCDate } from "@/utils/helpers";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import CategoryPicker from "./CategoryPicker";
-import {
-   Popover,
-   PopoverContent,
-   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon, Loader2, Pencil } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { Category, Department } from "@prisma/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { hr } from "date-fns/locale";
-import { useState, useEffect, useCallback } from "react";
-import { Separator } from "@/components/ui/separator";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createInvoice } from "@/actions/invoiceActions";
-import { toast } from "sonner";
-import { Category, Department } from "@prisma/client";
-import DepartmentPicker from "./DepartmentPicker";
-import { useRouter } from "next/navigation";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { CalendarIcon, Loader2, Lock, LockOpen } from "lucide-react";
 import Link from "next/link";
-import { DateToUTCDate } from "@/utils/helpers";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import CategoryPicker from "./CategoryPicker";
+import DepartmentPicker from "./DepartmentPicker";
 
 interface Props {
    type: InvoiceType;
@@ -71,14 +65,14 @@ const CreateInvoiceForm = ({ type }: Props) => {
       resolver: zodResolver(CreateInvoiceSchema),
       defaultValues: {
          invoiceNumber: "",
-         categoryOriginal: "",
-         categoryId: "",
-         departmentOriginal: "",
-         departmentId: "",
+         categoryId: undefined,
+         departmentId: undefined,
          vatRate: 25,
          netAmount: 0,
          grossAmount: 0,
          vatAmount: 0,
+         dateIssued: undefined,
+         datePaid: undefined,
          status: "NEPLACENO",
          type,
       },
@@ -127,7 +121,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
    const handleCategoryChange = useCallback(
       (category: Category) => {
-         form.setValue("categoryOriginal", category.name);
          form.setValue("categoryId", category.id);
       },
       [form]
@@ -135,7 +128,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
    const handleDepartmentChange = useCallback(
       (department: Department) => {
-         form.setValue("departmentOriginal", department.name);
          form.setValue("departmentId", department.id);
       },
       [form]
@@ -145,23 +137,26 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
    const { mutate, isPending } = useMutation({
       mutationFn: createInvoice,
-      onSuccess: () => {
-         toast.success("Račun je uspješno kreiran", {
-            id: "create-invoice",
-         });
+      onSuccess: async (response) => {
+         if (response.success) {
+            toast.success(response.message || "Račun je uspješno kreiran", {
+               id: "create-invoice",
+            });
 
-         form.reset();
+            // Refresh overview page data
+            await queryClient.invalidateQueries({
+               queryKey: ["overview"],
+            });
 
-         //NAKON ŠTO SMO KREIRALI RAČUN, TREBAMO REVALIDIRATI STRANICU PREGLEDA ŠTO ĆE REFETCHATI PODATKE
-
-         queryClient.invalidateQueries({
-            queryKey: ["overview"],
-         });
-
-         router.push(DEFAULT_LOGIN_REDIRECT);
+            router.push(DEFAULT_LOGIN_REDIRECT);
+         } else {
+            toast.error(response.message || "Došlo je do pogreške", {
+               id: "create-invoice",
+            });
+         }
       },
       onError: (error) => {
-         console.error("Neuspješna mutacija", error);
+         console.error("Greška pri kreiranju računa", error);
          toast.error("Greška pri kreiranju računa");
       },
    });
@@ -237,7 +232,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
                      <FormField
                         control={form.control}
-                        name="categoryOriginal"
+                        name="categoryId"
                         render={({ field }) => (
                            <FormItem className="md:col-span-2">
                               <FormLabel>Kategorija</FormLabel>
@@ -248,7 +243,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                  />
                               </FormControl>
                               <FormMessage>
-                                 {errors.categoryOriginal?.message}
+                                 {errors.categoryId?.message}
                               </FormMessage>
                            </FormItem>
                         )}
@@ -261,7 +256,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                   <div className="grid md:grid-cols-4 gap-4">
                      <FormField
                         control={form.control}
-                        name="departmentOriginal"
+                        name="departmentId"
                         render={({ field }) => (
                            <FormItem className="md:col-span-2">
                               <FormLabel>Odjel</FormLabel>
@@ -271,7 +266,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                  />
                               </FormControl>
                               <FormMessage>
-                                 {errors.departmentOriginal?.message}
+                                 {errors.departmentId?.message}
                               </FormMessage>
                            </FormItem>
                         )}
@@ -444,7 +439,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                               <FormLabel>Neto iznos</FormLabel>
                               <FormControl>
                                  <Input
-                                    type="text"
+                                    type="number"
                                     {...field}
                                     value={field.value === 0 ? "" : field.value}
                                  />
@@ -491,7 +486,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                               <FormControl>
                                  <div className="flex items-center relative">
                                     <Input
-                                       type="text"
+                                       type="number"
                                        {...field}
                                        disabled={!isVatEditable}
                                        className={cn(
@@ -507,7 +502,11 @@ const CreateInvoiceForm = ({ type }: Props) => {
                                           setIsVatEditable((prev) => !prev)
                                        }
                                     >
-                                       <Pencil size={16} />
+                                       {isVatEditable ? (
+                                          <LockOpen size={16} />
+                                       ) : (
+                                          <Lock size={16} />
+                                       )}
                                     </div>
                                  </div>
                               </FormControl>
@@ -521,7 +520,7 @@ const CreateInvoiceForm = ({ type }: Props) => {
                            <FormItem>
                               <FormLabel>Ukupno</FormLabel>
                               <FormControl>
-                                 <Input type="text" {...field} disabled />
+                                 <Input type="number" {...field} disabled />
                               </FormControl>
                               <FormMessage>
                                  {errors.grossAmount?.message}
@@ -563,8 +562,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
                         type="button"
                         variant="secondary"
                         onClick={() => {
-                           console.log(form.getValues());
-                           console.log("Form validation errors:", errors);
                            form.reset();
                         }}
                      >

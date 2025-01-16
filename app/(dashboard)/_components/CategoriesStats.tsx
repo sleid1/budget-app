@@ -65,10 +65,6 @@ function CategoriesCard({
       0
    );
 
-   console.log(data);
-   console.log(filteredData);
-   console.log(total);
-
    return (
       <Card className="h-80 w-full">
          <CardHeader>

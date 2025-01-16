@@ -94,13 +94,11 @@ model Invoice {
   status        InvoiceStatus @default(NEPLACENO)
 
   // Related fields
-  categoryId       Int?
-  categoryRel      Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryOriginal String? // Pohrani originalnu kategoriju
+  categoryId  Int?
+  categoryRel Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  departmentId       String?
-  departmentRel      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  departmentOriginal String? // Pohrani originalni department
+  departmentId  String?
+  departmentRel Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
   userId       String?
   userRel      User?   @relation(fields: [userId], references: [id], onDelete: SetNull)

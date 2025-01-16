@@ -13,13 +13,19 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
    const parsedBody = CreateInvoiceSchema.safeParse(form);
 
    if (!parsedBody.success) {
-      throw new Error("Došlo je do pogreške");
+      console.error("Validation error:", parsedBody.error);
+      return { success: false, message: "Neispravan request" };
    }
 
    const user = await auth();
 
    if (!user) {
+      console.error("Potrebna prijava. Korisnik nije prijavljen.");
       redirect(DEFAULT_LOGOUT_REDIRECT);
+      return {
+         success: false,
+         message: "Potrebna prijava. Korisnik nije prijavljen.",
+      };
    }
 
    const {
@@ -33,11 +39,8 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
       dateIssued,
       datePaid,
       status,
-      categoryOriginal,
       categoryId,
-      departmentOriginal,
       departmentId,
-      categoryIcon,
    } = parsedBody.data;
 
    console.log("Data for Invoice Creation:", {
@@ -50,11 +53,8 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
       dateIssued,
       datePaid,
       status,
-      categoryOriginal,
       categoryId,
-      departmentOriginal,
       departmentId,
-      categoryIcon: categoryIcon || "",
       description: description || "",
       userId: user?.user?.id,
       userOriginal: `${user?.user?.name} ${user?.user?.lastName}`,
@@ -108,6 +108,22 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
    });
 
    try {
+      const existingInvoice = await prisma.invoice.findFirst({
+         where: {
+            invoiceNumber,
+            categoryId,
+            departmentId,
+         },
+      });
+
+      if (existingInvoice) {
+         console.error("Broj računa već postoji u istoj kategoriji i odjelu.");
+         return {
+            success: false,
+            message: "Broj računa već postoji u istoj kategoriji i odjelu.",
+         };
+      }
+
       await prisma.$transaction([
          prisma.invoice.create({
             data: {
@@ -117,14 +133,12 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
                vatRate,
                grossAmount,
                type,
+               description: description || null,
                dateIssued,
                datePaid: datePaid || null,
                status,
-               categoryOriginal,
                categoryId,
-               departmentOriginal,
                departmentId,
-               description: description || "",
                userId: user?.user?.id,
                userOriginal: `${user?.user?.name} ${user?.user?.lastName}`,
             },
@@ -214,8 +228,10 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
             },
          }),
       ]);
+
+      return { success: true, message: "Račun je uspješno kreiran." };
    } catch (error) {
-      console.error("Transaction failed:", error.message);
-      throw error;
+      console.error("Transakcija nije uspjela:", error);
+      return { success: false, message: "Došlo je do pogreške." };
    }
 }

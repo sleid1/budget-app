@@ -47,8 +47,6 @@ const History = () => {
    const dataAvailable =
       historyDataQuery.data && historyDataQuery.data.length > 0;
 
-   console.log(historyDataQuery.data);
-
    return (
       <div className="container">
          <h2 className="mt-12 text-3xl font-bold">Povijest</h2>

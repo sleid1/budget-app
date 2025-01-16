@@ -37,14 +37,18 @@ export const CreateInvoiceSchema = z.object({
    status: z.enum(["NEPLACENO", "PLACENO", "KASNJENJE", "STORNIRANO"], {
       required_error: "Status računa je obavezan",
    }),
-   categoryOriginal: z.string().min(1, "Kategorija je obavezna"),
    categoryIcon: z.string().optional(),
    categoryId: z
-      .number()
-      .int()
-      .positive("ID kategorije mora biti pozitivan cijeli broj"),
-   departmentId: z.string().cuid("ID odjela mora biti valjani CUID"),
-   departmentOriginal: z.string().min(1, "Odjel je obavezan"),
+      .number({
+         required_error: "Kategorija je obavezna",
+      })
+      .int("ID kategorije mora biti cijeli broj")
+      .positive("ID kategorije mora biti pozitivan broj"),
+   departmentId: z
+      .string({
+         required_error: "Odjel je obavezan",
+      })
+      .cuid("ID odjela mora biti valjani CUID"),
 });
 
 export type CreateInvoiceSchemaType = z.infer<typeof CreateInvoiceSchema>;

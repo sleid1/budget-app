@@ -25,9 +25,14 @@ import { cn } from "@/lib/utils";
 interface Props {
    type: InvoiceType;
    onChange: (value: Category) => void;
+   excludeCategory?: Category;
 }
 
-const CategoryPicker = ({ type, onChange }: Props) => {
+const CategoryPicker = ({
+   type,
+   onChange,
+   excludeCategory,
+}: Props & { excludeCategory?: Category }) => {
    const [open, setOpen] = useState(false);
    const [value, setValue] = useState("");
 
@@ -42,7 +47,12 @@ const CategoryPicker = ({ type, onChange }: Props) => {
          fetch(`/api/categories?type=${type}`).then((res) => res.json()),
    });
 
-   const selectedCategory = categoriesQuery.data?.find(
+   // Filter out the excluded category
+   const filteredCategories = categoriesQuery.data?.filter(
+      (category: Category) => category.id !== excludeCategory?.id
+   );
+
+   const selectedCategory = filteredCategories?.find(
       (category: Category) => category.name === value.name
    );
 
@@ -90,8 +100,8 @@ const CategoryPicker = ({ type, onChange }: Props) => {
                </CommandEmpty>
                <CommandGroup>
                   <CommandList>
-                     {categoriesQuery.data &&
-                        categoriesQuery.data.map((category: Category) => (
+                     {filteredCategories &&
+                        filteredCategories.map((category: Category) => (
                            <CommandItem
                               key={category.name}
                               onSelect={() => {
