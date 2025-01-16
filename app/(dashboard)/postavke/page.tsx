@@ -95,7 +95,6 @@ function CategoryList({ type }: { type: InvoiceType }) {
 
                   <CreateCategoryDialog
                      type={type}
-                     successCallback={() => categoriesQuery.refetch()}
                      trigger={
                         <Button className="gap-2">
                            <PlusSquare className="w-4 h-4" />
@@ -135,8 +134,8 @@ function CategoryList({ type }: { type: InvoiceType }) {
                   {categoriesQuery.data.map((category: Category) => (
                      <CategoryCard
                         category={category}
+                        categories={categoriesQuery.data || []}
                         key={category.name}
-                        refetch={categoriesQuery.refetch}
                      />
                   ))}
                </div>
@@ -148,10 +147,10 @@ function CategoryList({ type }: { type: InvoiceType }) {
 
 function CategoryCard({
    category,
-   refetch,
+   categories,
 }: {
    category: Category;
-   refetch: () => void; // Define the prop for refetch
+   categories: Category[];
 }) {
    return (
       <div className="flex border-separate flex-col justify-between rounded-md border shadow-md shadow-black/[0.1] dark:shadow-white/[0.1]">
@@ -166,6 +165,7 @@ function CategoryCard({
          <div className="grid grid-cols-2 gap-2">
             <DeleteCategoryDialog
                category={category}
+               categories={categories}
                trigger={
                   <Button
                      className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-red-500 hover:text-white"
@@ -181,7 +181,6 @@ function CategoryCard({
                mode="update"
                category={category}
                type={category.type}
-               successCallback={refetch}
                trigger={
                   <Button
                      className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-blue-500 hover:text-white"

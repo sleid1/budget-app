@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { ReactNode, useCallback, useMemo } from "react";
 import CountUp from "react-countup";
+import { toast } from "sonner";
 
 interface Props {
    from: Date;
@@ -31,10 +32,19 @@ interface Props {
 const StatsCards = ({ from, to }: Props) => {
    const statsQuery = useQuery<GetBalanceStatsResponseType>({
       queryKey: ["overview", "stats", from, to],
-      queryFn: () =>
-         fetch(`/api/stats/balance?from=${from}&to=${to}`).then((res) =>
-            res.json()
-         ),
+      queryFn: async () => {
+         const response = await fetch(
+            `/api/stats/balance?from=${from}&to=${to}`
+         );
+         console.log(response);
+
+         if (!response.ok) {
+            toast.error(
+               "Došlo je do pogreške prilikom komunikacije s bazom podataka"
+            );
+         }
+         return response.json();
+      },
    });
 
    const income = statsQuery.data?.income || 0;

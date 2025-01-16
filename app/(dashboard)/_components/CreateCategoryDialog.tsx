@@ -47,7 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
    type: InvoiceType;
-   successCallback: (category: Category) => void;
+   successCallback?: (category: Category) => void;
    trigger?: React.ReactNode;
    category?: Category;
    mode?: "create" | "update";
@@ -93,7 +93,7 @@ const CreateCategoryDialog = ({
                { id: "create-category" }
             );
 
-            successCallback(response.data);
+            successCallback && successCallback(response.data);
 
             await queryClient.invalidateQueries({
                queryKey: ["categories"],

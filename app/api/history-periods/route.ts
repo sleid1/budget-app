@@ -36,6 +36,9 @@ async function getHistoryPeriods() {
       ),
    ];
 
+   console.log(years);
+   console.log(distinctYears);
+
    //VRATI TRENUTNU GODINU
    if (distinctYears.length === 0) {
       return [new Date().getFullYear()];

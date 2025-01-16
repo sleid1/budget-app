@@ -12,8 +12,7 @@ import {
    AlertDialogTitle,
    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { InvoiceType } from "@/lib/types";
-import { Category } from "@prisma/client";
+import { buttonVariants } from "@/components/ui/button";
 import {
    Select,
    SelectContent,
@@ -21,16 +20,21 @@ import {
    SelectTrigger,
    SelectValue,
 } from "@/components/ui/select";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ReactNode, useState } from "react";
+import { InvoiceType } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { Category } from "@prisma/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Trash } from "lucide-react";
+import { ReactNode, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface Props {
    trigger: ReactNode;
    category: Category;
+   categories: Category[];
 }
 
-const DeleteCategoryDialog = ({ category, trigger }: Props) => {
+const DeleteCategoryDialog = ({ category, categories, trigger }: Props) => {
    const categoryIdentifier = `${category.name}-${category.type}`;
    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
       null
@@ -38,35 +42,6 @@ const DeleteCategoryDialog = ({ category, trigger }: Props) => {
    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
    const queryClient = useQueryClient();
-
-   // Fetch invoice count for the category
-   const invoiceCountQuery = useQuery({
-      queryKey: ["category", "invoiceCount", category.id],
-      queryFn: async () => {
-         const response = await fetch(
-            `/api/categories?categoryId=${category.id}`
-         );
-         if (!response.ok) {
-            throw new Error("Failed to fetch invoice count");
-         }
-         return response.json();
-      },
-      enabled: isDialogOpen,
-      staleTime: Infinity,
-   });
-
-   // Fetch all categories for reassignment
-   const categoriesQuery = useQuery({
-      queryKey: ["categories", category.type],
-      queryFn: async () => {
-         const response = await fetch(`/api/categories?type=${category.type}`);
-         if (!response.ok) {
-            throw new Error("Failed to fetch categories");
-         }
-         return response.json();
-      },
-      staleTime: Infinity,
-   });
 
    const deleteMutation = useMutation({
       mutationFn: deleteCategory,
@@ -81,7 +56,12 @@ const DeleteCategoryDialog = ({ category, trigger }: Props) => {
          }
 
          setSelectedCategoryId(null); // Reset category selection on success
-         await queryClient.invalidateQueries({ queryKey: ["categories"] });
+         await queryClient.invalidateQueries({
+            queryKey: ["categories", category.type],
+         }); // Invalidate categories list
+         await queryClient.invalidateQueries({
+            queryKey: ["category", "invoiceCount", category.id],
+         }); // Invalidate invoice count for the deleted category
          setIsDialogOpen(false);
       },
       onError: (error) => {
@@ -96,47 +76,68 @@ const DeleteCategoryDialog = ({ category, trigger }: Props) => {
    });
 
    // Filter out the category being deleted from reassignment options
-   const filteredCategories = categoriesQuery.data?.filter(
-      (cat: Category) => cat.id !== category.id
+
+   const filteredCategories = useMemo(
+      () => categories.filter((cat) => cat.id !== category.id),
+      [categories, category.id]
    );
 
    const handleDialogClose = (open: boolean) => {
-      if (!deleteMutation.isLoading && !invoiceCountQuery.isFetching) {
-         setIsDialogOpen(open);
-         if (!open) {
-            setSelectedCategoryId(null); // Reset category selection on dialog close
-         }
+      setIsDialogOpen(open);
+      if (!open) {
+         setSelectedCategoryId(null); // Reset category selection on dialog close
       }
    };
 
    return (
       <AlertDialog open={isDialogOpen} onOpenChange={handleDialogClose}>
          <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+
          <AlertDialogContent>
             <AlertDialogHeader>
                <AlertDialogTitle>
                   Jesi li siguran da želiš obrisati{" "}
                   {category.type === "IZLAZNI_RACUN" ? "izlaznu" : "ulaznu"}{" "}
-                  kategoriju pod nazivom {category.name}?
+                  kategoriju pod nazivom{" "}
+                  <span
+                     className={cn(
+                        "uppercase",
+                        category.type === "IZLAZNI_RACUN"
+                           ? "text-red-500"
+                           : "text-emerald-500"
+                     )}
+                  >
+                     {category.name}
+                  </span>{" "}
+                  ?
                </AlertDialogTitle>
                <AlertDialogDescription>
-                  {invoiceCountQuery.isFetching ? (
-                     <span>Provjera povezanih računa...</span>
-                  ) : invoiceCountQuery.data?.invoiceCount > 0 ? (
-                     <span>
-                        Kategorija ima {invoiceCountQuery.data.invoiceCount}{" "}
-                        povezanih računa. Molimo odaberite novu kategoriju za
-                        povezane račune.
-                     </span>
+                  {categories.length > 1 ? (
+                     category.invoiceCount > 0 ? (
+                        <>
+                           Kategorija ima{" "}
+                           <span
+                              className={cn(
+                                 "font-bold mx-2 text-lg",
+                                 category.type === "IZLAZNI_RACUN"
+                                    ? "text-red-500"
+                                    : "text-emerald-500"
+                              )}
+                           >
+                              {category.invoiceCount}
+                           </span>{" "}
+                           povezanih računa. Molimo odaberite novu kategoriju za
+                           povezane račune.
+                        </>
+                     ) : (
+                        "Ova radnja ne može se otkazati te će kategorija biti trajno obrisana."
+                     )
                   ) : (
-                     <span>
-                        Ova radnja ne može se otkazati te će kategorija biti
-                        trajno obrisana.
-                     </span>
+                     "Trenutno imate samo jednu kategoriju. Stoga ne možete obrisati svoju posljednju kategoriju. Prije brisanja postojeće, molimo prvo kreirajte novu kategoriju."
                   )}
                </AlertDialogDescription>
             </AlertDialogHeader>
-            {invoiceCountQuery.data?.invoiceCount > 0 && filteredCategories && (
+            {category?.invoiceCount > 0 && filteredCategories.length > 0 && (
                <div>
                   <h3 className="text-sm font-medium mb-2">
                      Odaberite novu kategoriju:
@@ -157,22 +158,25 @@ const DeleteCategoryDialog = ({ category, trigger }: Props) => {
                         ))}
                      </SelectContent>
                   </Select>
+                  <p>
+                     Ova radnja ne može se otkazati te će kategorija biti trajno
+                     obrisana.
+                  </p>
                </div>
             )}
             <AlertDialogFooter>
-               <AlertDialogCancel
-                  disabled={
-                     deleteMutation.isLoading || invoiceCountQuery.isFetching
-                  }
-               >
+               <AlertDialogCancel disabled={deleteMutation.isPending}>
                   Odustani
                </AlertDialogCancel>
                <AlertDialogAction
+                  className={cn(
+                     "disabled:cursor-not-allowed",
+                     buttonVariants({ variant: "destructive" })
+                  )}
                   disabled={
-                     invoiceCountQuery.isFetching ||
-                     deleteMutation.isLoading ||
-                     (invoiceCountQuery.data?.invoiceCount > 0 &&
-                        !selectedCategoryId)
+                     deleteMutation.isPending ||
+                     (category?.invoiceCount > 0 && !selectedCategoryId) ||
+                     filteredCategories.length === 0
                   }
                   onClick={() => {
                      toast.loading("Brisanje kategorije i izmjena računa...", {
@@ -186,7 +190,8 @@ const DeleteCategoryDialog = ({ category, trigger }: Props) => {
                      });
                   }}
                >
-                  {deleteMutation.isLoading ? "Brisanje..." : "Obriši"}
+                  <Trash />
+                  {deleteMutation.isPending ? "Brisanje..." : "Obriši"}
                </AlertDialogAction>
             </AlertDialogFooter>
          </AlertDialogContent>
