@@ -36,10 +36,24 @@ import {
    SortingState,
    useReactTable,
 } from "@tanstack/react-table";
-import { MoreHorizontal, TrashIcon, X } from "lucide-react";
+import {
+   ChevronLeft,
+   ChevronRight,
+   MoreHorizontal,
+   TrashIcon,
+   X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import DeleteInvoiceDialog from "./DeleteInvoiceDialog";
 import InvoiceBadge from "./InvoiceBadge";
+
+import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
    from: Date;
@@ -175,6 +189,8 @@ export const columns: ColumnDef<InvoiceHistoryRow>[] = [
    },
 ];
 
+const pageSizeOptions = [5, 10, 20, 50];
+
 const InvoiceTable = ({ from, to }: Props) => {
    const [sorting, setSorting] = useState<SortingState>([]);
    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -189,7 +205,9 @@ const InvoiceTable = ({ from, to }: Props) => {
          ).then((res) => res.json()),
    });
 
-   console.log(invoiceHistory.data);
+   console.log("FROM", from);
+   console.log("FROM - DATE TO UTC", DateToUTCDate(from));
+   console.log("FROM - DATE TO ISO", from.toISOString());
 
    const table = useReactTable({
       data: invoiceHistory.data || emptyData,
@@ -198,6 +216,11 @@ const InvoiceTable = ({ from, to }: Props) => {
       state: {
          sorting,
          columnFilters,
+      },
+      initialState: {
+         pagination: {
+            pageSize: 10,
+         },
       },
       onSortingChange: setSorting,
       onColumnFiltersChange: setColumnFilters,
@@ -248,7 +271,7 @@ const InvoiceTable = ({ from, to }: Props) => {
    return (
       <div className="w-full">
          <div className="flex flex-wrap items-end justify-between gap-2 py-4">
-            <div className="flex gap-6">
+            <div className="flex gap-6 flex-wrap">
                {table.getColumn("categoryRel") && (
                   <DataTableFacetedFilter
                      title="Kategorija"
@@ -316,9 +339,9 @@ const InvoiceTable = ({ from, to }: Props) => {
                )}
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
                <DataTableViewOptions table={table} />
-            </div>
+            </div> */}
          </div>
          <SkeletonWrapper isLoading={invoiceHistory.isFetching}>
             <div className="rounded-md border">
@@ -371,23 +394,52 @@ const InvoiceTable = ({ from, to }: Props) => {
                   </TableBody>
                </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-               <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-               >
-                  Prethodna
-               </Button>
-               <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-               >
-                  Sljedeća
-               </Button>
+            <div className="flex items-center justify-between flex-wrap">
+               <div>
+                  <Select
+                     value={String(table.getState().pagination.pageSize)}
+                     onValueChange={(value) => table.setPageSize(Number(value))}
+                  >
+                     <SelectTrigger className="p-2">
+                        <SelectValue>
+                           {`Broj računa po stranici: ${
+                              table.getState().pagination.pageSize
+                           }`}
+                        </SelectValue>
+                     </SelectTrigger>
+                     <SelectContent>
+                        {pageSizeOptions.map((option) => (
+                           <SelectItem key={option} value={option.toString()}>
+                              {option}
+                           </SelectItem>
+                        ))}
+                     </SelectContent>
+                  </Select>
+               </div>
+               <div>
+                  Stranica {table.getState().pagination.pageIndex + 1} od{" "}
+                  {table.getPageCount()}
+               </div>
+               <div className="flex items-center justify-end space-x-2 py-4">
+                  <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => table.previousPage()}
+                     disabled={!table.getCanPreviousPage()}
+                  >
+                     <ChevronLeft />
+                     Prethodna
+                  </Button>
+                  <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => table.nextPage()}
+                     disabled={!table.getCanNextPage()}
+                  >
+                     Sljedeća
+                     <ChevronRight />
+                  </Button>
+               </div>
             </div>
          </SkeletonWrapper>
       </div>

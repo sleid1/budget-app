@@ -26,7 +26,7 @@ import DeleteCategoryDialog from "../_components/DeleteCategoryDialog";
 
 const Postavke = () => {
    return (
-      <div className="container flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
          <Card>
             <CardHeader>
                <CardTitle>Kategorije</CardTitle>

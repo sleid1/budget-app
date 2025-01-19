@@ -3,11 +3,14 @@ import React, { ReactNode } from "react";
 
 const layout = ({ children }: { children: ReactNode }) => {
    return (
-      <div className="relative flex h-screen w-full flex-col">
-         <Navbar />
-         <div className="w-full mt-5">
-            <div className="container">{children}</div>
-         </div>
+      <div className="min-h-screen flex flex-col gap-4">
+         {/* Header */}
+         <header>
+            <Navbar />
+         </header>
+
+         {/* Main Content */}
+         <main className="container">{children}</main>
       </div>
    );
 };

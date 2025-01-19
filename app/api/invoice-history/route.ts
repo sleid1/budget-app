@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { DEFAULT_LOGOUT_REDIRECT } from "@/routes";
 import { OverviewQuerySchema } from "@/schemas/overview";
-import { formatToCurrency } from "@/utils/helpers";
+import { DateToUTCDate, formatToCurrency } from "@/utils/helpers";
 import { redirect } from "next/navigation";
 
 export async function GET(request: Request) {
@@ -15,6 +15,8 @@ export async function GET(request: Request) {
    const { searchParams } = new URL(request.url);
    const from = searchParams.get("from");
    const to = searchParams.get("to");
+
+   console.log(from, to);
 
    const queryParams = OverviewQuerySchema.safeParse({ from, to });
 
@@ -38,6 +40,37 @@ export type getInvoiceHistoryResponseType = Awaited<
 
 async function getInvoiceHistory(from: Date, to: Date) {
    const formatter = formatToCurrency();
+
+   console.log("LOGGED OBJECT", {
+      where: {
+         dateIssued: {
+            gte: DateToUTCDate(from).toISOString(),
+            lte: DateToUTCDate(to).toISOString(),
+         },
+      },
+      orderBy: {
+         dateIssued: "desc",
+      },
+      include: {
+         categoryRel: {
+            select: {
+               name: true,
+               icon: true,
+            },
+         },
+         departmentRel: {
+            select: {
+               name: true,
+            },
+         },
+         userRel: {
+            select: {
+               name: true,
+               lastName: true,
+            },
+         },
+      },
+   });
 
    const invoices = await prisma.invoice.findMany({
       where: {

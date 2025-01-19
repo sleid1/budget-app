@@ -17,7 +17,7 @@ const Logo = ({ className }: LogoProps) => {
             height="100"
             src={LogoIcon}
             alt="Logo"
-            className="inline-block w-28 h-auto"
+            className="inline-block w-24 h-auto"
          />
       </Link>
    );
