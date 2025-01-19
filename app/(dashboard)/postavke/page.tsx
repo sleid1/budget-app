@@ -26,35 +26,19 @@ import DeleteCategoryDialog from "../_components/DeleteCategoryDialog";
 
 const Postavke = () => {
    return (
-      <div className="space-y-4">
+      <div className="container flex flex-col gap-4">
          <Card>
             <CardHeader>
-               <div className="flex flex-wrap items-center justify-between gap-6 py-8">
-                  <div className="">
-                     <CardTitle className="text-3xl font-bold">
-                        Upravljaj
-                     </CardTitle>
-                     <CardDescription>
-                        Upravljaj svojim kategorijama
-                     </CardDescription>
-                  </div>
-               </div>
+               <CardTitle>Kategorije</CardTitle>
+               <CardDescription>
+                  Upravljaj svojim kategorijama računa
+               </CardDescription>
             </CardHeader>
+            <CardContent className="space-y-6">
+               <CategoryList type="IZLAZNI_RACUN" />
+               <CategoryList type="ULAZNI_RACUN" />
+            </CardContent>
          </Card>
-         <div className="container flex flex-col gap-4">
-            <Card>
-               <CardHeader>
-                  <CardTitle>Kategorije</CardTitle>
-                  <CardDescription>
-                     Upravljaj svojim kategorijama računa
-                  </CardDescription>
-               </CardHeader>
-               <CardContent className="space-y-4">
-                  <CategoryList type="IZLAZNI_RACUN" />
-                  <CategoryList type="ULAZNI_RACUN" />
-               </CardContent>
-            </Card>
-         </div>
       </div>
    );
 };
@@ -107,7 +91,7 @@ function CategoryList({ type }: { type: InvoiceType }) {
 
             <Separator />
             {!dataAvailable && (
-               <div className="flex h-40 w-full items-center justify-center flex-col">
+               <div className="flex h-60 w-full items-center justify-center flex-col">
                   <p>
                      Nema
                      <span
@@ -130,7 +114,7 @@ function CategoryList({ type }: { type: InvoiceType }) {
             )}
 
             {dataAvailable && (
-               <div className="grid grid-flow-row gap-8 p-2 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+               <div className="grid grid-flow-row gap-10 p-4 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {categoriesQuery.data.map((category: Category) => (
                      <CategoryCard
                         category={category}

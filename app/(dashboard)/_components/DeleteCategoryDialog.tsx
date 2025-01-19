@@ -59,9 +59,7 @@ const DeleteCategoryDialog = ({ category, categories, trigger }: Props) => {
          await queryClient.invalidateQueries({
             queryKey: ["categories", category.type],
          }); // Invalidate categories list
-         await queryClient.invalidateQueries({
-            queryKey: ["category", "invoiceCount", category.id],
-         }); // Invalidate invoice count for the deleted category
+
          setIsDialogOpen(false);
       },
       onError: (error) => {
@@ -138,7 +136,7 @@ const DeleteCategoryDialog = ({ category, categories, trigger }: Props) => {
                </AlertDialogDescription>
             </AlertDialogHeader>
             {category?.invoiceCount > 0 && filteredCategories.length > 0 && (
-               <div>
+               <div className="space-y-2">
                   <h3 className="text-sm font-medium mb-2">
                      Odaberite novu kategoriju:
                   </h3>

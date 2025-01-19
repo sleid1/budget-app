@@ -22,7 +22,7 @@ const CreateInvoiceButtons = () => {
             href="/racuni/kreiraj-ulazni-racun"
             className={cn(
                buttonVariants(),
-               "border-rose-500 bg-rose-800 text-white hover:bg-emerald-700 hover:text-white"
+               "border-rose-500 bg-rose-800 text-white hover:bg-rose-700 hover:text-white"
             )}
          >
             <SquareMinus />

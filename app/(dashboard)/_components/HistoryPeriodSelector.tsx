@@ -32,7 +32,7 @@ const HistoryPeriodSelector = ({
    });
 
    return (
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex items-center gap-4 flex-nowrap">
          <SkeletonWrapper
             isLoading={historyPeriods.isFetching}
             fullWidth={false}

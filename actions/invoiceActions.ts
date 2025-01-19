@@ -235,3 +235,44 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
       return { success: false, message: "Došlo je do pogreške." };
    }
 }
+
+export async function deleteInvoice(invoiceId: string) {
+   const user = await auth();
+
+   if (!user) {
+      redirect(DEFAULT_LOGOUT_REDIRECT);
+      return {
+         success: false,
+         message: "Potrebna prijava. Korisnik nije prijavljen.",
+      };
+   }
+
+   try {
+      const invoice = await prisma.invoice.findUnique({
+         where: { id: invoiceId },
+      });
+
+      if (!invoice) {
+         return {
+            success: false,
+            message: "Račun nije pronađen.",
+         };
+      }
+
+      const deletedInvoice = await prisma.invoice.delete({
+         where: { id: invoiceId },
+      });
+
+      return {
+         success: true,
+         data: deletedInvoice,
+         message: "Račun je uspješno obrisan.",
+      };
+   } catch (error) {
+      console.error("Greška tijekom brisanja računa:", error);
+      return {
+         success: false,
+         message: "Došlo je do pogreške tijekom brisanja računa.",
+      };
+   }
+}
