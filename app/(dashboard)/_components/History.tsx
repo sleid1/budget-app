@@ -48,7 +48,7 @@ const History = () => {
       historyDataQuery.data && historyDataQuery.data.length > 0;
 
    return (
-      <div>
+      <div className="container">
          <h2 className="mt-12 text-3xl font-bold">Povijest</h2>
          <Card className="mt-2 w-full">
             <CardHeader className="gap-2">
@@ -74,13 +74,6 @@ const History = () => {
                      >
                         <div className="h-4 w-4 rounded-full bg-red-500"></div>
                         Rashodi
-                     </Badge>
-                     <Badge
-                        variant="outline"
-                        className="flex items-center gap-2 text-sm"
-                     >
-                        <div className="h-4 w-4 rounded-full bg-orange-500"></div>
-                        Stanje PDV
                      </Badge>
                   </div>
                </CardTitle>

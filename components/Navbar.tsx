@@ -1,17 +1,24 @@
 "use client";
 
-import React, { ReactNode, useState } from "react";
-import Logo from "./Logo";
-import { ChartNoAxesCombined, Layers3, Menu, Settings } from "lucide-react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "./ui/button";
-import { ThemeSwitcherButton } from "./ThemeSwitcherButton";
+import { DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { signOutAction } from "@/actions/authActions";
+import { cn } from "@/lib/utils";
+import {
+   ChartNoAxesCombined,
+   Layers3,
+   Menu,
+   Settings,
+   Users,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ReactNode, useState } from "react";
 import { LogoutButton } from "./auth/SignOutButton";
+import Logo from "./Logo";
+import { ThemeSwitcherButton } from "./ThemeSwitcherButton";
+import { Button, buttonVariants } from "./ui/button";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import RoleGate from "./auth/RoleGate";
 
 const Navbar = () => {
    return (
@@ -59,7 +66,14 @@ function MobileNavbar() {
                         ))}
                      </div>
 
-                     <div className="flex justify-center">
+                     <div className="flex justify-center gap-2">
+                        <RoleGate allowedRole="ADMIN">
+                           <NavbarItem
+                              link="/korisnici"
+                              icon={<Users />}
+                              clickCallBack={() => setIsOpen((prev) => !prev)}
+                           />
+                        </RoleGate>
                         <ThemeSwitcherButton />
                      </div>
                      <LogoutButton />
@@ -87,7 +101,11 @@ function DesktopNavbar() {
                      />
                   ))}
                </div>
+
                <div className="flex items-center gap-2">
+                  <RoleGate allowedRole="ADMIN">
+                     <NavbarItem link="/korisnici" icon={<Users />} />
+                  </RoleGate>
                   <ThemeSwitcherButton />
                   <LogoutButton />
                </div>
@@ -104,7 +122,7 @@ function NavbarItem({
    clickCallBack,
 }: {
    link: string;
-   label: string;
+   label?: string;
    icon: ReactNode;
    clickCallBack?: () => void;
 }) {

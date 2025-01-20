@@ -34,9 +34,8 @@ const StatsCards = ({ from, to }: Props) => {
       queryKey: ["overview", "stats", from, to],
       queryFn: async () => {
          const response = await fetch(
-            `/api/stats/balance?from=${from}&to=${to}`
+            `/api/stats/balance?from=${from.toISOString()}&to=${to.toISOString()}`
          );
-         console.log(response);
 
          if (!response.ok) {
             toast.error(

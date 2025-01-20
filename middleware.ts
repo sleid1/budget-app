@@ -6,6 +6,7 @@ import {
    apiAuthPrefix,
    DEFAULT_LOGIN_REDIRECT,
    DEFAULT_LOGOUT_REDIRECT,
+   adminRoutes,
 } from "./routes";
 
 const { auth } = NextAuth(authConfig);
@@ -15,11 +16,15 @@ export default auth((req) => {
 
    const isLoggedIn = !!req.auth;
 
+   const userRole = req.auth?.user?.role;
+
    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
 
    const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
 
    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+
+   const isAdminRoute = adminRoutes.includes(nextUrl.pathname);
 
    // Redirect unauthenticated users accessing `/` to DEFAULT_LOGOUT_REDIRECT
    if (nextUrl.pathname === "/") {
@@ -40,6 +45,19 @@ export default auth((req) => {
          return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
       }
 
+      return;
+   }
+
+   // Protect admin routes
+   if (isAdminRoute) {
+      if (!isLoggedIn) {
+         // Redirect unauthenticated users to the default logout route
+         return Response.redirect(new URL(DEFAULT_LOGOUT_REDIRECT, nextUrl));
+      }
+      if (userRole !== "ADMIN") {
+         // Redirect non-admin users to the default login redirect route
+         return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      }
       return;
    }
 

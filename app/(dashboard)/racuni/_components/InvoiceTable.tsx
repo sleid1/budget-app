@@ -3,7 +3,6 @@
 import { getInvoiceHistoryResponseType } from "@/app/api/invoice-history/route";
 import SkeletonWrapper from "@/components/SkeletonWrapper";
 import { DataTableColumnHeader } from "@/components/datatable/ColumnHeader";
-import { DataTableViewOptions } from "@/components/datatable/ColumnToggle";
 import { DataTableFacetedFilter } from "@/components/datatable/FacetedFilters";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +22,6 @@ import {
    TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DateToUTCDate } from "@/utils/helpers";
 import { useQuery } from "@tanstack/react-query";
 import {
    ColumnDef,
@@ -185,7 +183,17 @@ export const columns: ColumnDef<InvoiceHistoryRow>[] = [
    {
       id: "actions",
       enableHiding: false,
-      cell: ({ row }) => <RowActions invoice={row.original} />,
+      cell: ({ row }) => {
+         const {
+            id: invoiceId,
+            invoiceNumber,
+            status,
+            formattedAmount,
+         } = row.original;
+
+         const invoice = { invoiceId, invoiceNumber, status, formattedAmount };
+         return <RowActions invoice={invoice} />;
+      },
    },
 ];
 
@@ -199,15 +207,9 @@ const InvoiceTable = ({ from, to }: Props) => {
       queryKey: ["invoices", "history", from, to],
       queryFn: () =>
          fetch(
-            `/api/invoice-history/?from=${DateToUTCDate(
-               from
-            )}&to=${DateToUTCDate(to)}`
+            `/api/invoice-history/?from=${from.toISOString()}&to=${to.toISOString()}`
          ).then((res) => res.json()),
    });
-
-   console.log("FROM", from);
-   console.log("FROM - DATE TO UTC", DateToUTCDate(from));
-   console.log("FROM - DATE TO ISO", from.toISOString());
 
    const table = useReactTable({
       data: invoiceHistory.data || emptyData,
@@ -351,7 +353,10 @@ const InvoiceTable = ({ from, to }: Props) => {
                         <TableRow key={headerGroup.id}>
                            {headerGroup.headers.map((header) => {
                               return (
-                                 <TableHead key={header.id}>
+                                 <TableHead
+                                    key={header.id}
+                                    className="border-r border-gray-100"
+                                 >
                                     {header.isPlaceholder
                                        ? null
                                        : flexRender(
@@ -372,7 +377,10 @@ const InvoiceTable = ({ from, to }: Props) => {
                               data-state={row.getIsSelected() && "selected"}
                            >
                               {row.getVisibleCells().map((cell) => (
-                                 <TableCell key={cell.id}>
+                                 <TableCell
+                                    key={cell.id}
+                                    className="border-r border-gray-100"
+                                 >
                                     {flexRender(
                                        cell.column.columnDef.cell,
                                        cell.getContext()
@@ -448,7 +456,16 @@ const InvoiceTable = ({ from, to }: Props) => {
 
 export default InvoiceTable;
 
-function RowActions({ invoice }: { invoice: InvoiceHistoryRow }) {
+function RowActions({
+   invoice,
+}: {
+   invoice: {
+      invoiceId: string;
+      invoiceNumber: string;
+      formattedAmount: string;
+      status: string;
+   };
+}) {
    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
    return (
@@ -456,7 +473,7 @@ function RowActions({ invoice }: { invoice: InvoiceHistoryRow }) {
          <DeleteInvoiceDialog
             open={showDeleteDialog}
             setOpen={setShowDeleteDialog}
-            invoiceId={invoice.id}
+            invoice={invoice}
          />
          <DropdownMenu>
             <DropdownMenuTrigger asChild>

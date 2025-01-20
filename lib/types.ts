@@ -1,3 +1,5 @@
+import { UserRole } from "@prisma/client";
+
 export type InvoiceType = "ULAZNI_RACUN" | "IZLAZNI_RACUN";
 
 export type Timeframe = "month" | "year";

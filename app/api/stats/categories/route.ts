@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { DEFAULT_LOGOUT_REDIRECT } from "@/routes";
 import { OverviewQuerySchema } from "@/schemas/overview";
+import { adjustToStartOfDayUTC } from "@/utils/helpers";
 import { redirect } from "next/navigation";
 
 export async function GET(request: Request) {
@@ -35,12 +36,15 @@ export type GetCategoriesStatsResponseType = Awaited<
 >;
 
 async function getCategoriesStats(from: Date, to: Date) {
+   const fromDate = adjustToStartOfDayUTC(new Date(from));
+   const toDate = adjustToStartOfDayUTC(new Date(to));
+
    const groupedInvoices = await prisma.invoice.groupBy({
       by: ["type", "categoryId"],
       where: {
          dateIssued: {
-            gte: from,
-            lte: to,
+            gte: fromDate.toISOString(),
+            lte: toDate.toISOString(),
          },
       },
       _sum: {

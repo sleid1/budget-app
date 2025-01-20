@@ -7,6 +7,7 @@ import {
    CreateInvoiceSchema,
    CreateInvoiceSchemaType,
 } from "@/schemas/invoice";
+import { adjustToStartOfDayUTC } from "@/utils/helpers";
 import { redirect } from "next/navigation";
 
 export async function createInvoice(form: CreateInvoiceSchemaType) {
@@ -134,8 +135,8 @@ export async function createInvoice(form: CreateInvoiceSchemaType) {
                grossAmount,
                type,
                description: description || null,
-               dateIssued,
-               datePaid: datePaid || null,
+               dateIssued: adjustToStartOfDayUTC(dateIssued),
+               datePaid: datePaid ? adjustToStartOfDayUTC(datePaid) : null,
                status,
                categoryId,
                departmentId,
@@ -265,8 +266,7 @@ export async function deleteInvoice(invoiceId: string) {
 
       return {
          success: true,
-         data: deletedInvoice,
-         message: "Račun je uspješno obrisan.",
+         message: `Račun ${deletedInvoice.invoiceNumber} je uspješno obrisan`,
       };
    } catch (error) {
       console.error("Greška tijekom brisanja računa:", error);

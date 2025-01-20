@@ -33,7 +33,6 @@ import {
    CreateInvoiceSchema,
    CreateInvoiceSchemaType,
 } from "@/schemas/invoice";
-import { DateToUTCDate } from "@/utils/helpers";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, Department } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -169,10 +168,6 @@ const CreateInvoiceForm = ({ type }: Props) => {
 
          mutate({
             ...values,
-            dateIssued: DateToUTCDate(values.dateIssued),
-            datePaid: values.datePaid
-               ? DateToUTCDate(values.datePaid)
-               : undefined,
          });
       },
       [mutate]

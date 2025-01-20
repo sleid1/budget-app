@@ -72,13 +72,14 @@ export const registerAction = async (
 ) => {
    const validatedFields = RegisterSchema.safeParse(formData);
 
-   const { email, name, lastName, password } = validatedFields.data;
+   const { email, name, lastName, role } = validatedFields.data;
 
    const doesUserExist = await getUserByEmail(email);
 
    if (doesUserExist) {
       return {
-         error: "Korisnik s ovim emailom već postoji",
+         success: false,
+         message: "Korisnik s ovim emailom već postoji",
       };
    }
 
@@ -89,6 +90,7 @@ export const registerAction = async (
          email,
          name,
          lastName,
+         role,
          // password: hashedPassword,
       },
    });
@@ -101,7 +103,8 @@ export const registerAction = async (
    );
 
    return {
-      success: "Korisnik je uspješno kreiran ! Molimo potvrdite email adresu",
+      success: true,
+      message: "Korisnik je uspješno kreiran ! Molimo potvrdite email adresu",
    };
 };
 

@@ -1,4 +1,5 @@
 import { deleteInvoice } from "@/actions/invoiceActions";
+import { getInvoiceHistoryResponseType } from "@/app/api/invoice-history/route";
 import {
    AlertDialogFooter,
    AlertDialogHeader,
@@ -12,26 +13,44 @@ import {
    AlertDialogContent,
    AlertDialogDescription,
    AlertDialogTitle,
-} from "@radix-ui/react-alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash } from "lucide-react";
 import { toast } from "sonner";
+import {
+   Table,
+   TableBody,
+   TableCaption,
+   TableCell,
+   TableHead,
+   TableHeader,
+   TableRow,
+} from "@/components/ui/table";
+
+interface InvoiceData {
+   invoiceId: string;
+   invoiceNumber: string;
+   formattedAmount: string;
+   status: string;
+}
 
 interface Props {
    open: boolean;
    setOpen: (open: boolean) => void;
-   invoiceId: string;
+   invoice: InvoiceData;
 }
 
-const DeleteInvoiceDialog = ({ open, setOpen, invoiceId }: Props) => {
+const DeleteInvoiceDialog = ({ open, setOpen, invoice }: Props) => {
    const queryClient = useQueryClient();
+
+   console.dir(invoice);
 
    const deleteMutation = useMutation({
       mutationFn: deleteInvoice,
       onSuccess: async (response) => {
          if (response.success) {
             toast.success(response.message || "Račun je uspješno obrisan", {
-               id: invoiceId,
+               id: invoice.invoiceId,
             });
          }
 
@@ -47,7 +66,7 @@ const DeleteInvoiceDialog = ({ open, setOpen, invoiceId }: Props) => {
             errorMessage = error.message;
          }
          toast.error(errorMessage, {
-            id: invoiceId,
+            id: invoice.invoiceId,
          });
       },
    });
@@ -65,6 +84,35 @@ const DeleteInvoiceDialog = ({ open, setOpen, invoiceId }: Props) => {
                </AlertDialogDescription>
             </AlertDialogHeader>
 
+            <Table className="table-fixed w-full border border-gray-100">
+               <TableHeader>
+                  <TableRow>
+                     <TableHead className="font-bolder border-r border-gray-100">
+                        Broj računa
+                     </TableHead>
+                     <TableHead className="border-r border-gray-100">
+                        Iznos
+                     </TableHead>
+                     <TableHead className="border-r border-gray-100">
+                        Status
+                     </TableHead>
+                  </TableRow>
+               </TableHeader>
+               <TableBody>
+                  <TableRow>
+                     <TableCell className="font-bold border-r border-gray-100">
+                        {invoice.invoiceNumber}
+                     </TableCell>
+                     <TableCell className="border-r border-gray-100">
+                        {invoice.formattedAmount}
+                     </TableCell>
+                     <TableCell className="border-r border-gray-100">
+                        {invoice.status}
+                     </TableCell>
+                  </TableRow>
+               </TableBody>
+            </Table>
+
             <AlertDialogFooter>
                <AlertDialogCancel disabled={deleteMutation.isPending}>
                   Odustani
@@ -77,9 +125,9 @@ const DeleteInvoiceDialog = ({ open, setOpen, invoiceId }: Props) => {
                   disabled={deleteMutation.isPending}
                   onClick={() => {
                      toast.loading("Brisanje računa...", {
-                        id: invoiceId,
+                        id: invoice.invoiceId,
                      });
-                     deleteMutation.mutate(invoiceId);
+                     deleteMutation.mutate(invoice.invoiceId);
                   }}
                >
                   <Trash />

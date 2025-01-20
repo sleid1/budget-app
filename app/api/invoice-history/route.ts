@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { DEFAULT_LOGOUT_REDIRECT } from "@/routes";
 import { OverviewQuerySchema } from "@/schemas/overview";
-import { DateToUTCDate, formatToCurrency } from "@/utils/helpers";
+import { adjustToStartOfDayUTC, formatToCurrency } from "@/utils/helpers";
 import { redirect } from "next/navigation";
 
 export async function GET(request: Request) {
@@ -41,11 +41,14 @@ export type getInvoiceHistoryResponseType = Awaited<
 async function getInvoiceHistory(from: Date, to: Date) {
    const formatter = formatToCurrency();
 
+   const fromDate = adjustToStartOfDayUTC(new Date(from));
+   const toDate = adjustToStartOfDayUTC(new Date(to));
+
    console.log("LOGGED OBJECT", {
       where: {
          dateIssued: {
-            gte: DateToUTCDate(from).toISOString(),
-            lte: DateToUTCDate(to).toISOString(),
+            gte: fromDate.toISOString(),
+            lte: toDate.toISOString(),
          },
       },
       orderBy: {
@@ -75,12 +78,12 @@ async function getInvoiceHistory(from: Date, to: Date) {
    const invoices = await prisma.invoice.findMany({
       where: {
          dateIssued: {
-            gte: from,
-            lte: to,
+            gte: fromDate.toISOString(),
+            lte: toDate.toISOString(),
          },
       },
       orderBy: {
-         dateIssued: "desc",
+         createdAt: "desc",
       },
       include: {
          categoryRel: {
@@ -96,6 +99,7 @@ async function getInvoiceHistory(from: Date, to: Date) {
          },
          userRel: {
             select: {
+               id: true,
                name: true,
                lastName: true,
             },

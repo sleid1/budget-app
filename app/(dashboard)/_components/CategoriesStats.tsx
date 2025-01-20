@@ -17,9 +17,9 @@ const CategoriesStats = ({ from, to }: Props) => {
    const statsQuery = useQuery<GetCategoriesStatsResponseType>({
       queryKey: ["overview", "stats", "categories", from, to],
       queryFn: () =>
-         fetch(`/api/stats/categories?from=${from}&to=${to}`).then((res) =>
-            res.json()
-         ),
+         fetch(
+            `/api/stats/categories?from=${from.toISOString()}&to=${to.toISOString()}`
+         ).then((res) => res.json()),
    });
 
    const formatter = useMemo(() => {

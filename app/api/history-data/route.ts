@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { Period, Timeframe } from "@/lib/types";
 import { DEFAULT_LOGOUT_REDIRECT } from "@/routes";
+import { adjustToStartOfDayUTC } from "@/utils/helpers";
 import { getDaysInMonth } from "date-fns";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -67,13 +68,19 @@ type HistoryData = {
 };
 
 async function getYearHistoryData(year: number) {
+   // Start and end of the year in UTC
+   const startOfYear = adjustToStartOfDayUTC(new Date(Date.UTC(year, 0, 1))); // Jan 1st, 00:00:00 UTC
+   const startOfNextYear = adjustToStartOfDayUTC(
+      new Date(Date.UTC(year + 1, 0, 1))
+   ); // Jan 1st next year, 00:00:00 UTC
+
    // Fetch and group data by month from the Invoice model
    const result = await prisma.invoice.groupBy({
       by: ["type", "dateIssued"],
       where: {
          dateIssued: {
-            gte: new Date(year, 0, 1), // Start of the year
-            lt: new Date(year + 1, 0, 1), // Start of the next year
+            gte: startOfYear,
+            lt: startOfNextYear,
          },
       },
       _sum: {
@@ -92,8 +99,6 @@ async function getYearHistoryData(year: number) {
       let income = 0;
       let expense = 0;
       let vatBalance = 0;
-      // let netIncome = 0;
-      // let netExpense = 0;
 
       // Find rows for the current month
       for (const row of result) {
@@ -102,11 +107,9 @@ async function getYearHistoryData(year: number) {
          if (rowMonth === i) {
             if (row.type === "IZLAZNI_RACUN") {
                income += row._sum.grossAmount || 0;
-               // netIncome += row._sum.netAmount || 0;
                vatBalance -= row._sum.vatAmount || 0;
             } else if (row.type === "ULAZNI_RACUN") {
                expense += row._sum.grossAmount || 0;
-               // netExpense += row._sum.netAmount || 0;
                vatBalance += row._sum.vatAmount || 0;
             }
          }
@@ -119,8 +122,6 @@ async function getYearHistoryData(year: number) {
          income,
          expense,
          vatBalance,
-         // netIncome,
-         // netExpense,
       });
    }
 
@@ -128,13 +129,21 @@ async function getYearHistoryData(year: number) {
 }
 
 async function getMonthHistoryData(year: number, month: number) {
+   // Start and end of the month in UTC
+   const startOfMonth = adjustToStartOfDayUTC(
+      new Date(Date.UTC(year, month, 1))
+   );
+   const startOfNextMonth = adjustToStartOfDayUTC(
+      new Date(Date.UTC(year, month + 1, 1))
+   );
+
    // Fetch and group data by day from the Invoice model
    const result = await prisma.invoice.groupBy({
       by: ["type", "dateIssued"],
       where: {
          dateIssued: {
-            gte: new Date(year, month, 1), // Start of the month
-            lt: new Date(year, month + 1, 1), // Start of the next month
+            gte: startOfMonth, // Start of the month
+            lt: startOfNextMonth, // Start of the next month
          },
       },
       _sum: {

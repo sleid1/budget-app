@@ -1,3 +1,4 @@
+import { UserRole } from "@prisma/client";
 import * as z from "zod";
 
 export const NewPasswordSchema = z.object({
@@ -39,6 +40,10 @@ export const RegisterSchema = z.object({
       .nullable()
       .optional(),
    image: z.string().url().nullable().optional(),
+   role: z.enum(Object.values(UserRole), {
+      required_error: "Uloga je obavezna",
+      invalid_type_error: "Uloga mora biti USER ili ADMIN",
+   }),
 });
 
 export const confirmAccountSchema = z.object({
