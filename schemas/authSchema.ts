@@ -41,8 +41,8 @@ export const RegisterSchema = z.object({
       .optional(),
    image: z.string().url().nullable().optional(),
    role: z.enum(Object.values(UserRole), {
-      required_error: "Uloga je obavezna",
-      invalid_type_error: "Uloga mora biti USER ili ADMIN",
+      required_error: "Ovlast je obavezna",
+      invalid_type_error: "Ovlast mora biti USER ili ADMIN",
    }),
 });
 
